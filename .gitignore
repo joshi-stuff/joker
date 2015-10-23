@@ -1,0 +1,4 @@
+setenv
+src/uClibc/
+build
+out
