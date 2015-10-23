@@ -1,0 +1,7 @@
+setenv
+src/uClibc/
+build
+out
+test
+test.c
+test.s
