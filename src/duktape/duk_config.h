@@ -239,11 +239,6 @@ static __inline__ unsigned long long duk_rdtsc(void) {
 #define DUK_F_AMIGAOS
 #endif
 
-/* Free standing compilation (provided explicitly by user), improve if possible */
-#if defined(FREE_STANDING)
-#define DUK_F_FREESTANDING
-#endif
-
 /* Flash player (e.g. Crossbridge) */
 #if defined(__FLASHPLAYER__)
 #define DUK_F_FLASHPLAYER
@@ -561,14 +556,6 @@ static __inline__ unsigned long long duk_rdtsc(void) {
 #include <sys/param.h>
 #include <sys/time.h>
 #include <time.h>
-#elif defined(DUK_F_FREESTANDING)
-#define DUK_USE_DATE_NOW_FREESTANDING
-#define DUK_USE_DATE_TZO_FREESTANDING
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <limits.h>
-#include <libc.h>
 #else
 /* Other UNIX, hopefully others */
 #define DUK_USE_DATE_NOW_GETTIMEOFDAY
@@ -588,14 +575,12 @@ static __inline__ unsigned long long duk_rdtsc(void) {
 #endif
 
 /* Shared includes */
-#ifndef DUK_F_FREESTANDING
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>  /* varargs */
 #include <setjmp.h>
 #include <stddef.h>  /* e.g. ptrdiff_t */
-#endif
 #if defined(DUK_F_NO_STDINT_H)
 /* stdint.h not available */
 #else
@@ -604,9 +589,7 @@ static __inline__ unsigned long long duk_rdtsc(void) {
  */
 #include <stdint.h>
 #endif
-#ifndef DUK_F_FREESTANDING
 #include <math.h>
-#endif
 
 #if (defined(DUK_F_C99) || defined(DUK_F_CPP11)) && \
     !defined(DUK_F_BCC)
@@ -703,9 +686,7 @@ static __inline__ unsigned long long duk_rdtsc(void) {
 /* C99 or compatible */
 
 #define DUK_F_HAVE_64BIT
-#ifndef DUK_F_FREESTANDING
 #include <inttypes.h>
-#endif
 
 typedef uint8_t duk_uint8_t;
 typedef int8_t duk_int8_t;
@@ -3094,8 +3075,6 @@ DUK_INTERNAL_DECL duk_double_t duk_bi_date_get_now_time(duk_context *ctx);
 #elif defined(DUK_USE_DATE_NOW_WINDOWS)
 DUK_INTERNAL_DECL duk_double_t duk_bi_date_get_now_windows(duk_context *ctx);
 #define DUK_USE_DATE_GET_NOW(ctx)            duk_bi_date_get_now_windows((ctx))
-#elif defined(DUK_USE_DATE_NOW_FREESTANDING)
-#define DUK_USE_DATE_GET_NOW(ctx)            _get_now()
 #else
 #error no provider for DUK_USE_DATE_GET_NOW()
 #endif
@@ -3108,8 +3087,6 @@ DUK_INTERNAL_DECL duk_int_t duk_bi_date_get_local_tzoffset_gmtime(duk_double_t d
 #elif defined(DUK_USE_DATE_TZO_WINDOWS)
 DUK_INTERNAL_DECL duk_int_t duk_bi_date_get_local_tzoffset_windows(duk_double_t d);
 #define DUK_USE_DATE_GET_LOCAL_TZOFFSET(d)   duk_bi_date_get_local_tzoffset_windows((d))
-#elif defined(DUK_USE_DATE_TZO_FREESTANDING)
-#define DUK_USE_DATE_GET_LOCAL_TZOFFSET(d)   _get_tz_offset((d))
 #else
 #error no provider for DUK_USE_DATE_GET_LOCAL_TZOFFSET()
 #endif
