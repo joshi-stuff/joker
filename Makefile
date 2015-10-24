@@ -1,36 +1,71 @@
-SRC_DIR=src
+###############################################################################
+# Configuration
+###############################################################################
+TARGET=i686-elf
+BUILD=build
 
-BUILD_DIR=build
-OUT_DIR=out
+###############################################################################
+# Tools
+###############################################################################
+GCC=/Users/ivan/Desarrollo/Ivan/OS/usr/bin/$(TARGET)-gcc
+AS=/Users/ivan/Desarrollo/Ivan/OS/usr/bin/$(TARGET)-as
 
-KERNEL_FILE=jokernel.bin
-ISO_FILE=jokernel.bin
 
-all: clean iso
+###############################################################################
+# Modules
+###############################################################################
+COMPILE_FLAGS=-std=gnu99 -ffreestanding -DFREE_STANDING -O0
+LINK_FLAGS=-ffreestanding -O2 -nostdlib -lgcc
 
-clean:
-	rm -rf $(BUILD_DIR)
-	rm -rf $(OUT_DIR)
+SYSTEM=system
+SYSTEM_GCC_FLAGS=$(COMPILE_FLAGS) -I$(SYSTEM)
+SYSTEM_OBJS=system.o
 
-mkdirs:
-	[ -d $(BUILD_DIR) ] || mkdir $(BUILD_DIR)
-	[ -d $(OUT_DIR) ] || mkdir $(OUT_DIR)
+DUKTAPE=duktape
+DUKTAPE_GCC_FLAGS=$(COMPILE_FLAGS) -I$(SYSTEM)
+DUKTAPE_OBJS=duktape.o
 
-compile: mkdirs
-	[ -d $(BUILD_DIR)/compile ] || mkdir $(BUILD_DIR)/compile
-	i686-elf-as $(SRC_DIR)/kernel/boot.s -o $(BUILD_DIR)/compile/boot.o
-	i686-elf-gcc -c $(SRC_DIR)/kernel/kernel.c -o $(BUILD_DIR)/compile/kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-	i686-elf-gcc -c $(SRC_DIR)/libc/libc.c -o $(BUILD_DIR)/compile/libc.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra -DFREE_STANDING
-	i686-elf-gcc -c $(SRC_DIR)/duktape/duktape.c -o $(BUILD_DIR)/compile/duktape.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra -DFREE_STANDING -I$(SRC_DIR)/libc
+KERNEL=kernel
+KERNEL_GCC_FLAGS=$(COMPILE_FLAGS) -I$(SYSTEM) -I$(DUKTAPE)
+KERNEL_OBJS=kernel.o
 
+
+###############################################################################
+# Main targets
+###############################################################################
 link: compile
-	i686-elf-gcc -T $(SRC_DIR)/kernel/linker.ld -o $(OUT_DIR)/$(KERNEL_FILE) -ffreestanding -O2 -nostdlib $(BUILD_DIR)/compile/*.o -lgcc
+	$(GCC) -T $(KERNEL)/kernel.ld -o $(BUILD)/kernel.bin $(BUILD)/system/*.o $(BUILD)/duktape/*.o $(BUILD)/kernel/*.o $(LINK_FLAGS)
 
-iso: link
-	[ -d $(BUILD_DIR)/iso/boot/grub ] || mkdir -p $(BUILD_DIR)/iso/boot/grub
-	cp $(OUT_DIR)/$(KERNEL_FILE) $(BUILD_DIR)/iso/boot
-	cp $(SRC_DIR)/grub/grub.cfg $(BUILD_DIR)/iso/boot/grub
-	grub-mkrescue -o $(OUT_DIR)/joker.iso $(BUILD_DIR)/iso
+compile: mk_build compile_system compile_duktape compile_kernel
 
-qemu: iso
-	qemu-system-i386 -cdrom $(OUT_DIR)/joker.iso
+compile_system: $(patsubst %, $(BUILD)/$(SYSTEM)/%, $(SYSTEM_OBJS))
+
+compile_duktape: $(patsubst %, $(BUILD)/$(DUKTAPE)/%, $(DUKTAPE_OBJS))
+	
+compile_kernel: $(patsubst %, $(BUILD)/$(KERNEL)/%, $(KERNEL_OBJS))
+	
+clean:
+	rm -rf $(BUILD)
+
+
+###############################################################################
+# Auxiliary targets
+###############################################################################
+mk_build:
+	+@[ -d $(BUILD) ] || mkdir -p $(BUILD)
+	+@[ -d $(BUILD)/$(SYSTEM) ] || mkdir -p $(BUILD)/$(SYSTEM)
+	+@[ -d $(BUILD)/$(DUKTAPE) ] || mkdir -p $(BUILD)/$(DUKTAPE)
+	+@[ -d $(BUILD)/$(KERNEL) ] || mkdir -p $(BUILD)/$(KERNEL)
+
+
+###############################################################################
+# Compilation rules
+###############################################################################
+$(BUILD)/$(SYSTEM)/%.o: $(SYSTEM)/%.c 
+	$(GCC) -o $@ -c $< $(SYSTEM_GCC_FLAGS) 
+
+$(BUILD)/$(DUKTAPE)/%.o: $(DUKTAPE)/%.c 
+	$(GCC) -o $@ -c $< $(DUKTAPE_GCC_FLAGS) 
+
+$(BUILD)/$(KERNEL)/%.o: $(KERNEL)/%.c 
+	$(GCC) -o $@ -c $< $(KERNEL_GCC_FLAGS) 
