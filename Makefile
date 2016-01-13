@@ -21,6 +21,8 @@ UCLIBC_FLAGS=$(CFLAGS) -I$(UCLIBC_DIR)/stub_include -I$(UCLIBC_DIR)/fake_include
 LIBC_FLAGS=$(CFLAGS)
 DUKTAPE_FLAGS=$(CFLAGS) -I$(DUKTAPE_DIR)/stub_include -I$(DUKTAPE_DIR)/fake_include -I$(LIBC_DIR) -DDUK_OPT_HAVE_CUSTOM_H
 
+ASM=-S -masm=intel
+
 all: clean compile link iso
 
 clean:

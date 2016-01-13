@@ -63,12 +63,12 @@ typedef enum _idt_priv {
 	IDT_PRIV_3 = 0x60
 } idt_priv;
 
-typedef struct _gdt_descriptor {
+typedef packed_struct _gdt_descriptor {
   uint16_t limit;
   void*    base;
 } gdt_descriptor;
 
-typedef struct _gdt_entry {
+typedef packed_struct _gdt_entry {
   uint16_t limit_low;
   uint16_t base_low;
   uint8_t  base_middle;
@@ -77,12 +77,12 @@ typedef struct _gdt_entry {
   uint8_t  base_high;
 } gdt_entry;
 
-typedef struct _idt_descriptor {
+typedef packed_struct _idt_descriptor {
 	uint16_t size;
 	void*    address;
 } idt_descriptor;
 
-typedef struct _idt_entry {
+typedef packed_struct _idt_entry {
    uint16_t offset_high;  // offset bits 0..15
    uint16_t selector;     // a code segment selector in GDT or LDT
    uint8_t  zero;         // unused, set to 0

@@ -133,8 +133,10 @@ void print(void* dev, const char* text) {
 void dump(void* dev, const char* label, void* buffer, uint32_t len) {
   DEV_LOAD(vga, console);
 
-  print(dev, label);
-  print(dev, ":\n");
+  if (label) {
+    print(dev, label);
+    print(dev, ":\n");
+  }
 
   uint8_t* p = (uint8_t*)buffer;
   char cbuf[2] = {0, 0};

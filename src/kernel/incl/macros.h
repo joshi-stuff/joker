@@ -46,4 +46,6 @@ if (is(class, #driver_class) && is(id, driver_id)) {\
     remove_device(driver_class, driver_id);\
   }
 
+#define packed_struct struct __attribute__((packed))
+
 #endif
