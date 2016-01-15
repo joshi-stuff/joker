@@ -33,9 +33,8 @@ KERNEL_OBJS=kernel.o
 ###############################################################################
 # Main targets
 ###############################################################################
-link: compile
-	$(GCC) -T $(KERNEL)/kernel.ld -o $(BUILD)/kernel.bin $(BUILD)/*/*.o $(LINK_FLAGS)
-
+link: compile $(BUILD)/kernel.bin
+	
 compile: mk_build compile_libc compile_duktape compile_kernel
 
 compile_libc: $(patsubst %, $(BUILD)/$(LIBC)/%, $(LIBC_OBJS))
@@ -61,6 +60,9 @@ mk_build:
 ###############################################################################
 # Compilation rules
 ###############################################################################
+$(BUILD)/kernel.bin: $(BUILD)/*/*.o
+	$(GCC) -T $(KERNEL)/kernel.ld -o $(BUILD)/kernel.bin $(BUILD)/*/*.o $(LINK_FLAGS)
+	
 $(BUILD)/$(LIBC)/%.o: $(LIBC)/%.c 
 	$(GCC) -o $@ -c $< $(LIBC_GCC_FLAGS) 
 
