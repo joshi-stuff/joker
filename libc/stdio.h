@@ -4,7 +4,6 @@
 #define SEEK_SET 0
 #define SEEK_END 2
 
-//typedef unsigned int size_t;
 typedef struct {} FILE;
 
 int fprintf(FILE * restrict stream, const char * restrict format, ...);

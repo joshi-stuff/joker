@@ -9,7 +9,7 @@ int print(duk_context *ctx) {
 	return 0;
 }
 
- int main(int argc, char *argv[]) {
+ void _start() {
 	duk_context *ctx = duk_create_heap_default();
 
 	duk_push_global_object(ctx);
@@ -21,6 +21,4 @@ int print(duk_context *ctx) {
 	duk_pop(ctx);
 
 	duk_destroy_heap(ctx);
-
-	return 0;
 }
