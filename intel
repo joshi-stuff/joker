@@ -1,0 +1,15 @@
+GAS LISTING kernel/boot.s 			page 1
+
+
+DEFINED SYMBOLS
+       kernel/boot.s:2      *ABS*:0000000000000001 ALIGN
+       kernel/boot.s:3      *ABS*:0000000000000002 MEMINFO
+       kernel/boot.s:4      *ABS*:0000000000000003 FLAGS
+       kernel/boot.s:5      *ABS*:000000001badb002 MAGIC
+       kernel/boot.s:6      *ABS*:ffffffffe4524ffb CHECKSUM
+       kernel/boot.s:24     .bootstrap_stack:0000000000000000 stack_bottom
+       kernel/boot.s:26     .bootstrap_stack:0000000000004000 stack_top
+       kernel/boot.s:34     .text:0000000000000000 _start
+
+UNDEFINED SYMBOLS
+main
