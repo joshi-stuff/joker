@@ -2,72 +2,95 @@
 # Configuration
 ###############################################################################
 TARGET=i686-elf
-BUILD=build
 
 ###############################################################################
 # Tools
 ###############################################################################
-GCC=/Users/ivan/Desarrollo/Ivan/OS/usr/bin/$(TARGET)-gcc
-AS=/Users/ivan/Desarrollo/Ivan/OS/usr/bin/$(TARGET)-as
+TOOLS=/Users/ivan/Desarrollo/Ivan/OS/usr/bin
+GCC=$(TOOLS)/$(TARGET)-gcc
+AS=$(TOOLS)/$(TARGET)-as
+GRUB_MKRESCUE=$(TOOLS)/grub-mkrescue
+XORRISO=$(TOOLS)/xorriso
 
 
 ###############################################################################
 # Modules
 ###############################################################################
+ASSEMBLE_FLAGS=
 COMPILE_FLAGS=-std=gnu99 -ffreestanding -DFREE_STANDING -O0
 LINK_FLAGS=-ffreestanding -O2 -nostdlib -lgcc
 
-LIBC=libc
-LIBC_GCC_FLAGS=$(COMPILE_FLAGS) -I$(LIBC)
-LIBC_OBJS=libc.o
+LIBC_SOURCES=libc.c
+LIBC_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc
 
-DUKTAPE=duktape
-DUKTAPE_GCC_FLAGS=$(COMPILE_FLAGS) -I$(LIBC)
-DUKTAPE_OBJS=duktape.o
+DUKTAPE_SOURCES=duktape.c
+DUKTAPE_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc
 
-KERNEL=kernel
-KERNEL_GCC_FLAGS=$(COMPILE_FLAGS) -I$(LIBC) -I$(DUKTAPE)
-KERNEL_OBJS=kernel.o
+KERNEL_SOURCES=boot.s kernel.c
+KERNEL_AS_FLAGS=$(ASSEMBLE_FLAGS)
+KERNEL_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc -Iduktape
+
+ISO_GRUB_MKRESCUE_FLAGS=--xorriso=$(XORRISO)
 
 
 ###############################################################################
-# Main targets
+# Auxiliary vars
 ###############################################################################
-link: compile $(BUILD)/kernel.bin
-	
-compile: mk_build compile_libc compile_duktape compile_kernel
+LIBC_OBJS=$(patsubst %, build/libc/%.o, $(LIBC_SOURCES))
+DUKTAPE_OBJS=$(patsubst %, build/duktape/%.o, $(DUKTAPE_SOURCES))
+KERNEL_OBJS=$(patsubst %, build/kernel/%.o, $(KERNEL_SOURCES))
 
-compile_libc: $(patsubst %, $(BUILD)/$(LIBC)/%, $(LIBC_OBJS))
 
-compile_duktape: $(patsubst %, $(BUILD)/$(DUKTAPE)/%, $(DUKTAPE_OBJS))
+###############################################################################
+# Alias targets
+###############################################################################
+iso: build/kernel.iso
 	
-compile_kernel: $(patsubst %, $(BUILD)/$(KERNEL)/%, $(KERNEL_OBJS))
+kernel: build/kernel.bin
+	
+compile: compile_libc compile_duktape compile_kernel
+
+compile_libc: $(LIBC_OBJS)
+
+compile_duktape: $(DUKTAPE_OBJS)
+	
+compile_kernel: $(KERNEL_OBJS)
 	
 clean:
-	rm -rf $(BUILD)
+	rm -rf build
 
 
 ###############################################################################
-# Auxiliary targets
+# Artifact targets
 ###############################################################################
-mk_build:
-	+@[ -d $(BUILD) ] || mkdir -p $(BUILD)
-	+@[ -d $(BUILD)/$(LIBC) ] || mkdir -p $(BUILD)/$(LIBC)
-	+@[ -d $(BUILD)/$(DUKTAPE) ] || mkdir -p $(BUILD)/$(DUKTAPE)
-	+@[ -d $(BUILD)/$(KERNEL) ] || mkdir -p $(BUILD)/$(KERNEL)
-
-
-###############################################################################
-# Compilation rules
-###############################################################################
-$(BUILD)/kernel.bin: $(BUILD)/*/*.o
-	$(GCC) -T $(KERNEL)/kernel.ld -o $(BUILD)/kernel.bin $(BUILD)/*/*.o $(LINK_FLAGS)
+build/kernel.iso: build/iso/boot/grub/grub.cfg build/iso/boot/kernel.bin 
+	+@[ -d build ] || mkdir -p build
+	$(GRUB_MKRESCUE) -o build/kernel.iso build/iso $(ISO_GRUB_MKRESCUE_FLAGS) 
 	
-$(BUILD)/$(LIBC)/%.o: $(LIBC)/%.c 
+build/iso/boot/grub/grub.cfg: iso/grub.cfg
+	+@[ -d build/iso/boot/grub ] || mkdir -p build/iso/boot/grub
+	cp iso/grub.cfg build/iso/boot/grub/grub.cfg
+	
+build/iso/boot/kernel.bin: build/kernel.bin
+	+@[ -d build/iso/boot ] || mkdir -p build/iso/boot
+	cp build/kernel.bin build/iso/boot/kernel.bin
+
+build/kernel.bin: $(LIBC_OBJS) $(DUKTAPE_OBJS) $(KERNEL_OBJS)
+	+@[ -d build ] || mkdir -p build	
+	$(GCC) -T kernel/kernel.ld -o build/kernel.bin $(LIBC_OBJS) $(DUKTAPE_OBJS) $(KERNEL_OBJS) $(LINK_FLAGS)
+	
+build/libc/%.c.o: libc/%.c
+	+@[ -d build/libc ] || mkdir -p build/libc
 	$(GCC) -o $@ -c $< $(LIBC_GCC_FLAGS) 
 
-$(BUILD)/$(DUKTAPE)/%.o: $(DUKTAPE)/%.c 
+build/duktape/%.c.o: duktape/%.c
+	+@[ -d build/duktape ] || mkdir -p build/duktape
 	$(GCC) -o $@ -c $< $(DUKTAPE_GCC_FLAGS) 
 
-$(BUILD)/$(KERNEL)/%.o: $(KERNEL)/%.c 
+build/kernel/%.c.o: kernel/%.c
+	+@[ -d build/kernel ] || mkdir -p build/kernel
 	$(GCC) -o $@ -c $< $(KERNEL_GCC_FLAGS) 
+
+build/kernel/%.s.o: kernel/%.s
+	+@[ -d build/kernel ] || mkdir -p build/kernel
+	$(AS) -o $@ -c $< $(KERNEL_AS_FLAGS) 

@@ -9,7 +9,7 @@ int print(duk_context *ctx) {
 	return 0;
 }
 
- void _start() {
+ void main() {
 	duk_context *ctx = duk_create_heap_default();
 
 	duk_push_global_object(ctx);
