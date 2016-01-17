@@ -20,8 +20,8 @@ ASSEMBLE_FLAGS=-asm=intel
 COMPILE_FLAGS=-std=gnu99 -ffreestanding -DFREE_STANDING -O0 -masm=intel
 LINK_FLAGS=-ffreestanding -O2 -nostdlib -lgcc
 
-LIBC_SOURCES=libc.c
-LIBC_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc
+LIBC_SOURCES=libc.c stdio.c string.c _helpers.c 
+LIBC_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc -Ikernel
 
 DUKTAPE_SOURCES=duktape.c
 DUKTAPE_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc
