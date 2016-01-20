@@ -2,14 +2,25 @@ GAS LISTING kernel/boot.s 			page 1
 
 
 DEFINED SYMBOLS
-       kernel/boot.s:2      *ABS*:0000000000000001 ALIGN
-       kernel/boot.s:3      *ABS*:0000000000000002 MEMINFO
-       kernel/boot.s:4      *ABS*:0000000000000003 FLAGS
-       kernel/boot.s:5      *ABS*:000000001badb002 MAGIC
-       kernel/boot.s:6      *ABS*:ffffffffe4524ffb CHECKSUM
-       kernel/boot.s:24     .bootstrap_stack:0000000000000000 stack_bottom
-       kernel/boot.s:26     .bootstrap_stack:0000000000004000 stack_top
-       kernel/boot.s:34     .text:0000000000000000 _start
+       kernel/boot.s:3      *ABS*:0000000000000001 ALIGN
+       kernel/boot.s:4      *ABS*:0000000000000002 MEMINFO
+       kernel/boot.s:5      *ABS*:0000000000000004 VIDINFO
+       kernel/boot.s:6      *ABS*:0000000000010000 ADDRINFO
+       kernel/boot.s:8      *ABS*:0000000000000007 FLAGS
+       kernel/boot.s:9      *ABS*:000000001badb002 MAGIC
+       kernel/boot.s:10     *ABS*:ffffffffe4524ff7 CHECKSUM
+       kernel/boot.s:12     *ABS*:0000000000000000 HDRADDR
+       kernel/boot.s:13     *ABS*:0000000000000000 LOADADDR
+       kernel/boot.s:14     *ABS*:0000000000000000 LOADENDADDR
+       kernel/boot.s:15     *ABS*:0000000000000000 BSSENDADDR
+       kernel/boot.s:16     *ABS*:0000000000000000 ENTRYADDR
+       kernel/boot.s:18     *ABS*:0000000000000001 VIDMODE
+       kernel/boot.s:19     *ABS*:0000000000000050 VIDWIDTH
+       kernel/boot.s:20     *ABS*:000000000000002b VIDHEIGHT
+       kernel/boot.s:21     *ABS*:0000000000000000 VIDDEPTH
+       kernel/boot.s:48     .bootstrap_stack:0000000000000000 stack_bottom
+       kernel/boot.s:50     .bootstrap_stack:0000000000004000 stack_top
+       kernel/boot.s:60     .text:0000000000000000 _start
 
 UNDEFINED SYMBOLS
 main

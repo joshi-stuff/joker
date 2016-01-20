@@ -59,6 +59,9 @@ compile_kernel: $(KERNEL_OBJS)
 clean:
 	rm -rf build
 
+qemu: iso
+	qemu-system-i386 build/kernel.iso
+
 
 ###############################################################################
 # Artifact targets

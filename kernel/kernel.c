@@ -1,6 +1,8 @@
-#include "bios.h"
 #include <duktape.h>
 #include <stdint.h>
+#include <stdio.h>
+#include "bios.h"
+#include "multiboot.h"
 
 /*
 int print(duk_context *ctx) {
@@ -25,14 +27,21 @@ duk_pop(ctx);
 duk_destroy_heap(ctx);
 */
 
-void main(void* mbd, uint32_t magic) {
+void main(multiboot_info* mbi, uint32_t magic) {
 	bios_init();
-	bios_print("Welcome to Joker!\n");	
 	
-	char str[256];
-	sprintf(str, "mbd=%08X magic=%08X", mbd, magic);
-	bios_print("\n");
-	bios_print("\n");
-	bios_print(str);
+	printf("Welcome to Joker!\n");	
+	printf("\n");
+	printf("mem_lower = %X\n", mbi->mem_lower);
+	printf("mem_upper = %X\n", mbi->mem_upper);
+	printf("\n");
+	printf("mmap_length = %X\n", mbi->mmap_length);
+	printf("mmap_addr = %X\n", mbi->mmap_addr);
 	
+	mmap_entry* mma = mbi->mmap_addr;
+	printf("\n");
+	printf("entry_size = %X\n", mma->entry_size);
+	printf("base_addr = %llX\n", mma->base_addr);
+	printf("length = %llX\n", mma->length);
+	printf("type = %X\n", mma->type);
 }

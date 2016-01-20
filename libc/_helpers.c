@@ -10,3 +10,14 @@ void _reverse(char s[]) {
 		s[j] = c;
 	}
 }
+
+int _to_int(char* begin, char* end) {
+	int i = 0, mag = 1;
+	
+	for(end--; end>=begin; end--) {
+		i += (*end - '0') * mag;
+		mag *= 10;
+	}
+	
+	return i;
+}

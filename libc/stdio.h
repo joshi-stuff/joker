@@ -1,3 +1,6 @@
+#ifndef _STDIO_H
+#define _STDIO_H
+
 #include <stdarg.h>
 #include <stddef.h>
 
@@ -19,6 +22,9 @@ long ftell(FILE *stream);
 size_t fread(void *restrict ptr, size_t size, size_t nitems, FILE *restrict stream);
 int	fclose(FILE *stream);
 int sprintf(char * restrict str, const char * restrict format, ...);
+int printf(const char * restrict format, ...);
 
 extern FILE* stderr;
 extern FILE* stdout;
+
+#endif
