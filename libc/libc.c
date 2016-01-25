@@ -30,14 +30,6 @@ int setjmp(jmp_buf env) NOT_IMPLEMENTED(setjmp)
 void longjmp(jmp_buf env, int val) NOT_IMPLEMENTED_V(longjmp)
 
 	
-/* stdlib.h ******************************************************************/
-#include "stdlib.h"
-void abort(void) NOT_IMPLEMENTED_V(abort)
-void *malloc(size_t size) NOT_IMPLEMENTED(malloc)
-void *realloc(void *ptr, size_t size) NOT_IMPLEMENTED(realloc)
-void free(void *ptr) NOT_IMPLEMENTED_V(free)
-int atoi(const char *str) NOT_IMPLEMENTED(atoi);
-	
 /* time.h ********************************************************************/
 #include "time.h"
 struct tm *gmtime(const time_t *clock) NOT_IMPLEMENTED(gmtime)

@@ -9,3 +9,6 @@ joker.workspace
 kernel.project
 .codelite
 intel
+.cproject
+.project
+.settings

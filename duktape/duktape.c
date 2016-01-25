@@ -10546,9 +10546,9 @@ DUK_INTERNAL_DECL duk_bool_t duk_debug_remove_breakpoint(duk_hthread *thr, duk_s
 
 #ifdef DUK_USE_VARIADIC_MACROS
 
-#define DUK_DPRINT(...)
-#define DUK_DDPRINT(...)
-#define DUK_DDDPRINT(...)
+#define DUK_DPRINT(...) {printf(__VA_ARGS__); printf("\n");}
+#define DUK_DDPRINT(...) {printf(__VA_ARGS__); printf("\n");}
+#define DUK_DDDPRINT(...) {printf(__VA_ARGS__); printf("\n");}
 
 #else  /* DUK_USE_VARIADIC_MACROS */
 
@@ -43845,7 +43845,6 @@ duk_heap *duk_heap_alloc(duk_alloc_function alloc_func,
 	/*
 	 *  Computed values (e.g. INFINITY)
 	 */
-
 #if defined(DUK_USE_COMPUTED_NAN)
 	do {
 		/* Workaround for some exotic platforms where NAN is missing

@@ -1,6 +1,6 @@
 #include "string.h"
 
-void _reverse(char s[]) {
+void _reverse(char *s) {
 	int length = strlen(s);
 	int c, i, j;
 
@@ -11,7 +11,7 @@ void _reverse(char s[]) {
 	}
 }
 
-int _to_int(char* begin, char* end) {
+int _to_int(const char* begin, const char* end) {
 	int i = 0, mag = 1;
 	
 	for(end--; end>=begin; end--) {
