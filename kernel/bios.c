@@ -33,11 +33,11 @@ void bios_clrscr() {
 }
 
 void bios_moveto(int row, int col) {
-  if ((row > 0) && (row < SCREEN_HEIGHT)) {
+  if ((row >= 0) && (row < SCREEN_HEIGHT)) {
     _row = row;
   }
 	
-  if ((col > 0) && (col < SCREEN_WIDTH)) {
+  if ((col >= 0) && (col < SCREEN_WIDTH)) {
     _col = col;
   }
 	

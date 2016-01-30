@@ -48,7 +48,7 @@
 stack_bottom:
 .skip 16384 # 16 KiB
 stack_top:
-
+.global stack_bottom, stack_top
 
 # The linker script specifies _start as the entry point to the kernel and the
 # bootloader will jump to this position once the kernel has been loaded. It
@@ -64,6 +64,7 @@ _start:
 	movl $stack_top, %esp
 
 	# Push address of multiboot information and magic number and call main()
+  push %esp
 	push %eax
 	push %ebx
 	call main

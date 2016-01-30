@@ -2,7 +2,6 @@
 
 void bios_init();
 
-
 /* BIOS: screen **************************************************************/
 
 #define COLOR_BLACK 0

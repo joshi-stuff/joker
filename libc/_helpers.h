@@ -1,12 +1,7 @@
-#include <bios.h>
-
 #include "stdio.h"
 
-#define NOT_IMPLEMENTED(fn)   {bios_print("NOT IMPLEMENTED: " #fn "\n");return 0;}
-#define NOT_IMPLEMENTED_V(fn) {bios_print("NOT IMPLEMENTED: " #fn "\n");}
-
-#define DBG(...) {printf(__VA_ARGS__);}
-#define DBG(...) {}
+#define NOT_IMPLEMENTED(fn)   {printf("NOT IMPLEMENTED: " #fn "\n");return 0;}
+#define NOT_IMPLEMENTED_V(fn) {printf("NOT IMPLEMENTED: " #fn "\n");}
 
 #define _is_num(c) (((c)-'0' <= 9) && ((c)-'0' >= 0))
 

@@ -5,13 +5,9 @@
 void *memset(void *b, int c, size_t len) {
   uint8_t* p = (uint8_t*) b;
 
-  DBG("memset: set %X to %X of %d bytes\n", b, c, len);
-
   while ((len--) > 0) {
-    DBG("memset: set %p to %d\n", p, c);
     *(p++) = c;
   }
-  DBG("memset: finish %p %u\n", p, len);
 
   return b;
 }
@@ -19,8 +15,6 @@ void *memset(void *b, int c, size_t len) {
 void *memcpy(void *restrict dst, const void *restrict src, size_t n) {
   uint8_t* ps = (uint8_t*) src;
   uint8_t* pd = (uint8_t*) dst;
-
-  DBG("memcpy: copy %X to %X of %d bytes\n", src, dst, n);
 
   while ((n--) > 0) {
     *(ps++) = *(pd++);
@@ -43,8 +37,6 @@ size_t strlen(const char *s) {
 int memcmp(const void *s1, const void *s2, size_t n) {
   uint8_t* p1 = (uint8_t*) s1;
   uint8_t* p2 = (uint8_t*) s2;
-
-  DBG("memcmp: compare %X to %X of %d bytes\n", s1, s2, n);
 
   while ((n--) > 0) {
     uint8_t diff = *(p1++) - *(p2++);

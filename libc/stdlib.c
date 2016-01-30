@@ -1,29 +1,25 @@
+#include <kernel.h>
+#include <mmu.h>
+
 #include "stdlib.h"
 #include "stdint.h"
 #include "stdio.h"
 #include "_helpers.h"
 
-uint8_t* mempool = (uint8_t*) 100000;
-
 void abort(void) {
-  printf("Uh, oh, abort called :-(\n");
-  while(1);
+  panic("Abort called");
 }
 
 void *malloc(size_t size) {
-  void* block = mempool;
-
-  mempool += size;
-
-  DBG("malloc: return %X of %d bytes\n", block, size);
-
-  return block;
+  return mmu_alloc(size);
 }
 
-void *realloc(void *ptr, size_t size)NOT_IMPLEMENTED(realloc)
+void *realloc(void *ptr, size_t size) {
+  return mmu_realloc(ptr, size);
+}
 
 void free(void *ptr) {
-  DBG("free: free %X\n", ptr);
+  mmu_free(ptr);
 }
 
 int atoi(const char *str)NOT_IMPLEMENTED(atoi)

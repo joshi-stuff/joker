@@ -16,9 +16,9 @@ XORRISO=$(TOOLS)/xorriso
 ###############################################################################
 # Modules
 ###############################################################################
-ASSEMBLE_FLAGS=-asm=intel
+ASSEMBLE_FLAGS=
 COMPILE_FLAGS=-std=gnu99 -ffreestanding -DFREE_STANDING -O0 -masm=intel
-LINK_FLAGS=-ffreestanding -O2 -nostdlib -lgcc
+LINK_FLAGS=-ffreestanding -O2 -nostdlib -lgcc -Wl,-Map,build/kernel.map
 
 LIBC_SOURCES=libc.c stdio.c stdlib.c string.c _helpers.c
 LIBC_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc -Ikernel
@@ -26,7 +26,7 @@ LIBC_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc -Ikernel
 DUKTAPE_SOURCES=duktape.c
 DUKTAPE_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc
 
-KERNEL_SOURCES=boot.s kernel.c bios.c
+KERNEL_SOURCES=boot.s kernel.c bios.c mmu.c
 KERNEL_AS_FLAGS=$(ASSEMBLE_FLAGS)
 KERNEL_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc -Iduktape
 

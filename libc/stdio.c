@@ -1,3 +1,5 @@
+#include <bios.h>
+
 #include "stdio.h"
 #include "string.h"
 #include "stdint.h"
@@ -609,6 +611,12 @@ void _process_string(_specifier* spec, _format* fmt, _write_fn write, void* out)
   }
 }
 
+void _process_char(_specifier* spec, _format* fmt, _write_fn write, void* out) {
+  char val = (char)va_arg(*(fmt->ap), int);
+
+  write(out, val);
+}
+
 void _process_specifier(_parsed_format* pfmt, _format* fmt, _write_fn write,
     void* out) {
   if (pfmt->type == PF_SPECIFIER) {
@@ -628,6 +636,10 @@ void _process_specifier(_parsed_format* pfmt, _format* fmt, _write_fn write,
 
     case TYPE_X:
       _process_unsigned(&pfmt->specifier, fmt, write, out, "0123456789ABCDEF");
+      break;
+
+    case TYPE_c:
+      _process_char(&pfmt->specifier, fmt, write, out);
       break;
 
     case TYPE_s:
