@@ -1,3 +1,7 @@
+#ifndef _TIME_H
+#define _TIME_H
+
+typedef unsigned int time_t;
 struct tm {
 	int tm_sec;
 	int tm_min;
@@ -9,10 +13,11 @@ struct tm {
 	int tm_yday;
 	int tm_isdst;
 };
-typedef unsigned int time_t;
 
 struct tm *gmtime(const time_t *clock);
 time_t time(time_t *tloc);
 struct tm *localtime(const time_t *clock);
 time_t mktime(struct tm *timeptr);
 double difftime(time_t time1, time_t time0);
+
+#endif

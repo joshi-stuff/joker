@@ -9,6 +9,9 @@
 
 typedef struct {} FILE;
 
+extern FILE* stderr;
+extern FILE* stdout;
+
 int fprintf(FILE * restrict stream, const char * restrict format, ...);
 int fflush(FILE *stream);
 int vsnprintf(char * restrict str, size_t size, const char * restrict format, va_list ap);
@@ -23,8 +26,5 @@ size_t fread(void *restrict ptr, size_t size, size_t nitems, FILE *restrict stre
 int	fclose(FILE *stream);
 int sprintf(char * restrict str, const char * restrict format, ...);
 int printf(const char * restrict format, ...);
-
-extern FILE* stderr;
-extern FILE* stdout;
 
 #endif

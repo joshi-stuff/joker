@@ -9,7 +9,7 @@
 #define WIDTH_FETCH     -1
 #define PRECISION_NONE  -2
 #define PRECISION_FETCH -1
-#define MOD_NONE 		  0
+#define MOD_NONE 		    0
 #define MOD_hh   		    1
 #define MOD_h    		    2
 #define MOD_l    		    3
@@ -40,19 +40,19 @@
 #define PF_TEXT					1
 #define PF_SPECIFIER		2
 
-typedef struct __format {
+typedef struct _format_t {
   const char* format;
   size_t cursor;
   va_list* ap;
-} _format;
+} format_t;
 
-typedef struct __buffer {
+typedef struct _buffer_t {
   char* text;
   size_t length;
   size_t size;
-} _buffer;
+} buffer_t;
 
-typedef struct __specifier {
+typedef struct _specifier_t {
   int flag_left_justify;
   int flag_plus_sign;
   int flag_space_sign;
@@ -62,39 +62,39 @@ typedef struct __specifier {
   int precision;
   int modifier;
   int type;
-} _specifier;
+} specifier_t;
 
-typedef struct __text {
+typedef struct _text_t {
   const char* text;
   size_t length;
-} _text;
+} text_t;
 
-typedef struct __parsed_format {
+typedef struct _parsed_format_t {
   int type;
   union {
-    _text text;
-    _specifier specifier;
+    text_t text;
+    specifier_t specifier;
   };
-} _parsed_format;
+} parsed_format_t;
 
 /* Returns 0 if no more output possible, 1 otherwise */
-typedef int (*_write_fn)(void* out, char c);
+typedef int (*write_fn_t)(void* out, char c);
 
 FILE *stderr, *stdout;
 
-void _init_format(_format* fmt, const char* format, va_list *ap) {
+static void format_init(format_t* fmt, const char* format, va_list *ap) {
   fmt->format = format;
   fmt->cursor = 0;
   fmt->ap = ap;
 }
 
-void _init_buffer(_buffer* buffer, char* text, size_t size) {
+static void buffer_init(buffer_t* buffer, char* text, size_t size) {
   buffer->text = text;
   buffer->size = size;
   buffer->length = 0;
 }
 
-void _init_specifier(_specifier* spec) {
+static void specifier_init(specifier_t* spec) {
   spec->flag_left_justify = 0;
   spec->flag_plus_sign = 0;
   spec->flag_space_sign = 0;
@@ -106,17 +106,17 @@ void _init_specifier(_specifier* spec) {
   spec->type = TYPE_NONE;
 }
 
-void _init_text(_text* text) {
+static void text_init(text_t* text) {
   text->text = 0;
   text->length = 0;
 }
 
-void _init_parsed_format(_parsed_format* pfmt) {
+static void parsed_format_init(parsed_format_t* pfmt) {
   pfmt->type = PF_EMPTY;
 }
 
 /* Returns 1 if text is fetched, 0 if [fmt] exhausted */
-int _fetch_text(_format* fmt, _parsed_format* pfmt) {
+static int format_fetch_text(format_t* fmt, parsed_format_t* pfmt) {
   if (!fmt->format[fmt->cursor]) {
     return 0;
   }
@@ -145,7 +145,7 @@ int _fetch_text(_format* fmt, _parsed_format* pfmt) {
 }
 
 /* Returns 1 if flags are fetched, 0 if [fmt] exhausted */
-int _fetch_flags(_format* fmt, _parsed_format* pfmt) {
+static int format_fetch_flags(format_t* fmt, parsed_format_t* pfmt) {
   if (!fmt->format[fmt->cursor]) {
     return 0;
   }
@@ -197,7 +197,7 @@ int _fetch_flags(_format* fmt, _parsed_format* pfmt) {
 }
 
 /* Returns 1 if width is fetched, 0 if [fmt] exhausted */
-int _fetch_width(_format* fmt, _parsed_format* pfmt) {
+static int format_fetch_width(format_t* fmt, parsed_format_t* pfmt) {
   if (!fmt->format[fmt->cursor]) {
     return 0;
   }
@@ -222,7 +222,7 @@ int _fetch_width(_format* fmt, _parsed_format* pfmt) {
 }
 
 /* Returns 1 if precision is fetched, 0 if [fmt] exhausted */
-int _fetch_precision(_format* fmt, _parsed_format* pfmt) {
+static int format_fetch_precision(format_t* fmt, parsed_format_t* pfmt) {
   if (!fmt->format[fmt->cursor]) {
     return 0;
   }
@@ -253,7 +253,7 @@ int _fetch_precision(_format* fmt, _parsed_format* pfmt) {
 }
 
 /* Returns 1 if modifier is fetched, 0 if [fmt] exhausted */
-int _fetch_modifier(_format* fmt, _parsed_format* pfmt) {
+static int format_fetch_modifier(format_t* fmt, parsed_format_t* pfmt) {
   if (!fmt->format[fmt->cursor]) {
     return 0;
   }
@@ -311,7 +311,7 @@ int _fetch_modifier(_format* fmt, _parsed_format* pfmt) {
 }
 
 /* Returns 1 if specifier is fetched, 0 if [fmt] exhausted */
-int _fetch_type(_format* fmt, _parsed_format* pfmt) {
+static int format_fetch_type(format_t* fmt, parsed_format_t* pfmt) {
   if (!fmt->format[fmt->cursor]) {
     return 0;
   }
@@ -410,13 +410,13 @@ int _fetch_type(_format* fmt, _parsed_format* pfmt) {
   return 1;
 }
 
-int _fetch_specifier(_format* fmt, _parsed_format* pfmt) {
+static int format_fetch_specifier(format_t* fmt, parsed_format_t* pfmt) {
   if (!fmt->format[fmt->cursor]) {
     return 0;
   }
 
   pfmt->type = PF_SPECIFIER;
-  _init_specifier(&pfmt->specifier);
+  specifier_init(&pfmt->specifier);
 
   if (fmt->format[fmt->cursor] != '%') {
     return 1;
@@ -426,31 +426,31 @@ int _fetch_specifier(_format* fmt, _parsed_format* pfmt) {
 
   int rc;
 
-  rc = _fetch_flags(fmt, pfmt);
+  rc = format_fetch_flags(fmt, pfmt);
   if (!rc) {
     return 0;
   }
 
-  rc = _fetch_width(fmt, pfmt);
+  rc = format_fetch_width(fmt, pfmt);
   if (!rc) {
     return 0;
   }
 
-  rc = _fetch_precision(fmt, pfmt);
+  rc = format_fetch_precision(fmt, pfmt);
   if (!rc) {
     return 0;
   }
 
-  rc = _fetch_modifier(fmt, pfmt);
+  rc = format_fetch_modifier(fmt, pfmt);
   if (!rc) {
     return 0;
   }
 
-  return _fetch_type(fmt, pfmt);
+  return format_fetch_type(fmt, pfmt);
 }
 
-int _write_buffer(void* out, char c) {
-  _buffer* buffer = (_buffer*) out;
+static int write_buffer(void* out, char c) {
+  buffer_t* buffer = (buffer_t*) out;
 
   if (buffer->length < buffer->size) {
     buffer->text[buffer->length++] = c;
@@ -460,27 +460,18 @@ int _write_buffer(void* out, char c) {
   return 0;
 }
 
-int _write_bios(void *out, char c) {
+static int write_bios(void *out, char c) {
   char sz[2] = { c, 0 };
   bios_print(sz);
   return 1;
 }
 
-int _write_file(void *out, char c) {
+static int write_file(void *out, char c) {
   return fputc(c, (FILE*) out);
 }
 
-void _process_text(_parsed_format* pfmt, _write_fn write, void* out) {
-  if (pfmt->type == PF_TEXT) {
-    for (int i = 0; i < pfmt->text.length; i++) {
-      if (!write(out, pfmt->text.text[i])) {
-        return;
-      }
-    }
-  }
-}
-
-void _process_signed(_specifier* spec, _format* fmt, _write_fn write, void* out) {
+static void specifier_process_signed(specifier_t* spec, format_t* fmt,
+    write_fn_t write, void* out) {
   intmax_t val = 0;
 
   switch (spec->modifier) {
@@ -542,8 +533,8 @@ void _process_signed(_specifier* spec, _format* fmt, _write_fn write, void* out)
   }
 }
 
-void _process_unsigned(_specifier* spec, _format* fmt, _write_fn write,
-    void* out, char* symbols) {
+static void specifier_process_unsigned(specifier_t* spec, format_t* fmt,
+    write_fn_t write, void* out, char* symbols) {
 
   uintmax_t val = 0;
 
@@ -601,7 +592,9 @@ void _process_unsigned(_specifier* spec, _format* fmt, _write_fn write,
   }
 }
 
-void _process_string(_specifier* spec, _format* fmt, _write_fn write, void* out) {
+static void specifier_process_string(specifier_t* spec, format_t* fmt,
+    write_fn_t write, void* out) {
+
   char* val = va_arg(*(fmt->ap), char*);
 
   while (*val) {
@@ -611,69 +604,85 @@ void _process_string(_specifier* spec, _format* fmt, _write_fn write, void* out)
   }
 }
 
-void _process_char(_specifier* spec, _format* fmt, _write_fn write, void* out) {
-  char val = (char)va_arg(*(fmt->ap), int);
+static void specifier_process_char(specifier_t* spec, format_t* fmt,
+    write_fn_t write, void* out) {
+  char val = (char) va_arg(*(fmt->ap), int);
 
   write(out, val);
 }
 
-void _process_specifier(_parsed_format* pfmt, _format* fmt, _write_fn write,
+static void parsed_format_process_text(parsed_format_t* pfmt, write_fn_t write,
     void* out) {
+  if (pfmt->type == PF_TEXT) {
+    for (int i = 0; i < pfmt->text.length; i++) {
+      if (!write(out, pfmt->text.text[i])) {
+        return;
+      }
+    }
+  }
+}
+
+static void parsed_format_process_specifier(parsed_format_t* pfmt,
+    format_t* fmt, write_fn_t write, void* out) {
+
   if (pfmt->type == PF_SPECIFIER) {
     switch (pfmt->specifier.type) {
     case TYPE_d:
-      _process_signed(&pfmt->specifier, fmt, write, out);
+      specifier_process_signed(&pfmt->specifier, fmt, write, out);
       break;
 
     case TYPE_u:
-      _process_unsigned(&pfmt->specifier, fmt, write, out, "0123456789");
+      specifier_process_unsigned(&pfmt->specifier, fmt, write, out,
+          "0123456789");
       break;
 
     case TYPE_p:
     case TYPE_x:
-      _process_unsigned(&pfmt->specifier, fmt, write, out, "0123456789abcdef");
+      specifier_process_unsigned(&pfmt->specifier, fmt, write, out,
+          "0123456789abcdef");
       break;
 
     case TYPE_X:
-      _process_unsigned(&pfmt->specifier, fmt, write, out, "0123456789ABCDEF");
+      specifier_process_unsigned(&pfmt->specifier, fmt, write, out,
+          "0123456789ABCDEF");
       break;
 
     case TYPE_c:
-      _process_char(&pfmt->specifier, fmt, write, out);
+      specifier_process_char(&pfmt->specifier, fmt, write, out);
       break;
 
     case TYPE_s:
-      _process_string(&pfmt->specifier, fmt, write, out);
+      specifier_process_string(&pfmt->specifier, fmt, write, out);
       break;
     }
   }
 }
 
-int _process_format(_format* fmt, _write_fn write, void* out) {
-  _parsed_format pfmt;
+static int format_process(format_t* fmt, write_fn_t write, void* out) {
+  parsed_format_t pfmt;
   int written = 0;
 
   for (;;) {
-    _init_parsed_format(&pfmt);
-    if (!_fetch_text(fmt, &pfmt)) {
+    parsed_format_init(&pfmt);
+    if (!format_fetch_text(fmt, &pfmt)) {
       return written;
     }
 
-    _process_text(&pfmt, write, out);
+    parsed_format_process_text(&pfmt, write, out);
 
-    _init_parsed_format(&pfmt);
-    if (!_fetch_specifier(fmt, &pfmt)) {
+    parsed_format_init(&pfmt);
+    if (!format_fetch_specifier(fmt, &pfmt)) {
       return written;
     }
 
-    _process_specifier(&pfmt, fmt, write, out);
+    parsed_format_process_specifier(&pfmt, fmt, write, out);
   }
 
   // TODO: return written chars
   return written;
 }
 
-/* **************************************************************************************** */
+/******************************************************************************/
 
 int fflush(FILE *stream)NOT_IMPLEMENTED(fflush)
 int fputc(int c, FILE *stream)NOT_IMPLEMENTED(fput)
@@ -691,10 +700,10 @@ int fprintf(FILE * restrict stream, const char * restrict format, ...) {
   va_list ap;
   va_start(ap, format);
 
-  _format fmt;
-  _init_format(&fmt, format, &ap);
+  format_t fmt;
+  format_init(&fmt, format, &ap);
 
-  int ret = _process_format(&fmt, _write_file, stream);
+  int ret = format_process(&fmt, write_file, stream);
 
   va_end(ap);
   return ret;
@@ -704,10 +713,10 @@ int printf(const char * restrict format, ...) {
   va_list ap;
   va_start(ap, format);
 
-  _format fmt;
-  _init_format(&fmt, format, &ap);
+  format_t fmt;
+  format_init(&fmt, format, &ap);
 
-  int ret = _process_format(&fmt, _write_bios, NULL);
+  int ret = format_process(&fmt, write_bios, NULL);
 
   va_end(ap);
   return ret;
@@ -736,13 +745,13 @@ int snprintf(char * restrict str, size_t size, const char * restrict format,
 
 int vsnprintf(char * restrict str, size_t size, const char * restrict format,
     va_list ap) {
-  _format fmt;
-  _init_format(&fmt, format, &ap);
+  format_t fmt;
+  format_init(&fmt, format, &ap);
 
-  _buffer buffer;
-  _init_buffer(&buffer, str, size);
+  buffer_t buffer;
+  buffer_init(&buffer, str, size);
 
-  return _process_format(&fmt, _write_buffer, ap);
+  return format_process(&fmt, write_buffer, ap);
 }
 
 int sscanf(const char *restrict s, const char *restrict format, ...)NOT_IMPLEMENTED(

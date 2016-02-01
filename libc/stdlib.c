@@ -7,7 +7,7 @@
 #include "_helpers.h"
 
 void abort(void) {
-  panic("Abort called");
+  k_panic("Abort called");
 }
 
 void *malloc(size_t size) {

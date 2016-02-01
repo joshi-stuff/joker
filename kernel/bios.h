@@ -1,9 +1,3 @@
-/* BIOS **********************************************************************/
-
-void bios_init();
-
-/* BIOS: screen **************************************************************/
-
 #define COLOR_BLACK 0
 #define COLOR_BLUE 1
 #define COLOR_GREEN 2
@@ -23,6 +17,8 @@ void bios_init();
 
 #define SCREEN_HEIGHT 25
 #define SCREEN_WIDTH  80
+
+void bios_init();
 
 void bios_clrscr();
 void bios_moveto(int row, int col);
