@@ -19,7 +19,9 @@ void *realloc(void *ptr, size_t size) {
 }
 
 void free(void *ptr) {
-  mmu_free(ptr);
+  if (ptr) {
+    mmu_free(ptr);
+  }
 }
 
 int atoi(const char *str)NOT_IMPLEMENTED(atoi)
