@@ -709,6 +709,7 @@ int fprintf(FILE * restrict stream, const char * restrict format, ...) {
   return ret;
 }
 
+#ifndef _TEST_
 int printf(const char * restrict format, ...) {
   va_list ap;
   va_start(ap, format);
@@ -721,12 +722,19 @@ int printf(const char * restrict format, ...) {
   va_end(ap);
   return ret;
 }
+#endif
 
 int sprintf(char * restrict str, const char * restrict format, ...) {
   va_list ap;
   va_start(ap, format);
 
-  int ret = vsnprintf(str, SIZE_MAX, format, ap);
+  format_t fmt;
+  format_init(&fmt, format, &ap);
+
+  buffer_t buffer;
+  buffer_init(&buffer, str, SIZE_MAX);
+
+  int ret = format_process(&fmt, write_buffer, &buffer);
 
   va_end(ap);
   return ret;
@@ -737,22 +745,28 @@ int snprintf(char * restrict str, size_t size, const char * restrict format,
   va_list ap;
   va_start(ap, format);
 
-  int ret = vsnprintf(str, size, format, ap);
-
-  va_end(ap);
-  return ret;
-}
-
-int vsnprintf(char * restrict str, size_t size, const char * restrict format,
-    va_list ap) {
   format_t fmt;
   format_init(&fmt, format, &ap);
 
   buffer_t buffer;
   buffer_init(&buffer, str, size);
 
-  return format_process(&fmt, write_buffer, ap);
+  int ret = format_process(&fmt, write_buffer, &buffer);
+
+  va_end(ap);
+  return ret;
 }
+
+int vsnprintf(char * restrict str, size_t size, const char * restrict format,
+    va_list ap)NOT_IMPLEMENTED(vsnprintf) /* DOES NOT WORK BECAUSE OF ap {
+ format_t fmt;
+ format_init(&fmt, format, &ap);
+
+ buffer_t buffer;
+ buffer_init(&buffer, str, size);
+
+ return format_process(&fmt, write_buffer, &buffer);
+ }*/
 
 int sscanf(const char *restrict s, const char *restrict format, ...)NOT_IMPLEMENTED(
     sscanf)
