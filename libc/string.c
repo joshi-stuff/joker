@@ -17,7 +17,7 @@ void *memcpy(void *restrict dst, const void *restrict src, size_t n) {
   uint8_t* pd = (uint8_t*) dst;
 
   while ((n--) > 0) {
-    *(ps++) = *(pd++);
+    *(pd++) = *(ps++);
   }
 
   return dst;
@@ -49,9 +49,11 @@ int memcmp(const void *s1, const void *s2, size_t n) {
 }
 
 int strcmp(const char *s1, const char *s2) {
-  while (*(s1++) && *(s2++)) {
+  while (*s1 && *s2) {
     if (*s1 != *s2)
       break;
+    s1++;
+    s2++;
   }
   return *s1 - *s2;
 }
@@ -61,5 +63,15 @@ char *strcpy(char * dst, const char * src) {
   while (*src) {
     *(dst++) = *(src++);
   }
+  return ret;
+}
+
+char *strncpy(char * dst, const char * src, size_t len) {
+  char* ret = dst;
+  while (*src && (len > 1)) {
+    *(dst++) = *(src++);
+    len--;
+  }
+  *dst = 0;
   return ret;
 }

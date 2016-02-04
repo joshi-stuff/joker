@@ -46,7 +46,7 @@
 
 .section .bootstrap_stack, "aw", @nobits
 stack_bottom:
-.skip 16384 # 16 KiB
+.skip 1048576 # 1MB
 stack_top:
 .global stack_bottom, stack_top
 

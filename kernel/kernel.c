@@ -3,6 +3,7 @@
 
 #include "kernel.h"
 #include "bios.h"
+#include "debug.h"
 #include "mmu.h"
 #include "multiboot.h"
 
@@ -41,26 +42,6 @@ static void duk_test() {
   duk_destroy_heap(ctx);
 }
 
-void main(multiboot_info_t* mbi, uint32_t magic) {
-  bios_init();
-
-  printf("kernel: booting joker");
-  if ((mbi->flags & MBI_FLAG_CMDLINE) && *mbi->cmdline) {
-    printf(" with arguments '%s'", mbi->cmdline);
-  }
-  printf("\n");
-
-  // Init memory map
-  if (mbi->flags & MBI_FLAG_MMAP) {
-    mmu_init(mbi->mmap_addr, mbi->mmap_length, kernel_start, kernel_end,
-        stack_start, stack_end);
-  } else {
-    k_panic("No memory map available from GRUB2");
-  }
-
-  duk_test();
-}
-
 void k_panic(const char* msg) {
   bios_print("\nkernel panic: ");
   bios_print(msg);
@@ -92,17 +73,48 @@ void k_ensure_abort(const char* condition, const char* file, size_t line) {
   size_t count = k_get_call_stack(8, addrs);
 
   snprintf(msg, sizeof(msg), "assert failed (%s:%d): %s\n"
-      "kernel panic: call stack: %p\n"
-      "                          %p\n"
-      "                          %p\n"
-      "                          %p\n"
-      "                          %p\n"
-      "                          %p\n"
-      "                          %p\n"
-      "                          %p\n", file, line, condition, addrs[0],
-      addrs[1], addrs[2], addrs[3], addrs[4], addrs[5], addrs[6], addrs[7]);
+      "kernel panic: call stack: %p %s\n"
+      "                          %p %s\n"
+      "                          %p %s\n"
+      "                          %p %s\n"
+      "                          %p %s\n"
+      "                          %p %s\n"
+      "                          %p %s\n"
+      "                          %p %s\n", file, line, condition, addrs[0],
+      dbg_symbol_at(addrs[0])->name, addrs[1], dbg_symbol_at(addrs[1])->name,
+      addrs[2], dbg_symbol_at(addrs[2])->name, addrs[3],
+      dbg_symbol_at(addrs[3])->name, addrs[4], dbg_symbol_at(addrs[4])->name,
+      addrs[5], dbg_symbol_at(addrs[5])->name, addrs[6],
+      dbg_symbol_at(addrs[6])->name, addrs[7], dbg_symbol_at(addrs[7])->name);
 
   k_panic(msg);
+}
+
+void main(multiboot_info_t* mbi, uint32_t magic) {
+  bios_init();
+
+  printf("kernel: booting joker");
+  if ((mbi->flags & MBI_FLAG_CMDLINE) && *mbi->cmdline) {
+    printf(" with arguments '%s'", mbi->cmdline);
+  }
+  printf("\n");
+
+  // Init memory map
+  if (mbi->flags & MBI_FLAG_MMAP) {
+    mmu_init(mbi->mmap_addr, mbi->mmap_length, kernel_start, kernel_end,
+        stack_start, stack_end);
+  } else {
+    k_panic("no memory map available from GRUB2");
+  }
+
+  // Init debug
+  if (mbi->flags & MBI_FLAG_SYMS_ELF) {
+    dbg_init(&(mbi->syms.elf));
+  } else {
+    dbg_init(0);
+  }
+
+  duk_test();
 }
 
 /* http://yosefk.com/blog/getting-the-call-stack-without-a-frame-pointer.html */

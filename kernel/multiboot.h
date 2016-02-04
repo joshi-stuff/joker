@@ -1,6 +1,8 @@
 #ifndef _MULTIBOOT_H
 #define _MULTIBOOT_H
 
+#include "elf.h"
+
 #define MMAP_TYPE_AVAILABLE 0x00000001
 
 #define DRIVE_MODE_CHS 0x00000000
@@ -26,19 +28,23 @@ typedef struct _mod_entry_t {
   uint32_t reserved;
 } mod_entry_t;
 
+typedef struct _aout_t {
+  uint32_t tabsize;
+  uint32_t strsize;
+  void* addr;
+  uint32_t reserved;
+} aout_t;
+
+typedef struct _elf_t {
+  uint32_t num;
+  uint32_t size;
+  elf32_shdr_t* addr;
+  uint32_t shndx;
+} elf_t;
+
 typedef union _syms_data_t {
-  struct {
-    uint32_t tabsize;
-    uint32_t strsize;
-    void* addr;
-    uint32_t reserved;
-  } aout;
-  struct {
-    uint32_t num;
-    uint32_t size;
-    void* addr;
-    uint32_t shndx;
-  } elf;
+  aout_t aout;
+  elf_t elf;
 } syms_data_t;
 
 typedef struct _mmap_entry_t {
