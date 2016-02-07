@@ -4,6 +4,7 @@
 #include "kernel.h"
 #include "bios.h"
 #include "debug.h"
+#include "twa.h"
 #include "mmu.h"
 #include "multiboot.h"
 
@@ -12,12 +13,14 @@ typedef struct _stack_frame_t {
   void* ret;
 } stack_frame_t;
 
-extern uint8_t stack_bottom, stack_top;
+extern uint8_t stack_bottom, stack_top, twa_bottom, twa_top;
 
 static void *kernel_start = (void*) 0x100000;
 static void *kernel_end = (void*) ((uint32_t) &stack_bottom - 1);
 static void *stack_start = &stack_bottom;
-static void *stack_end = &stack_top;
+static void *stack_end = (void*) ((uint32_t) &stack_top - 1);
+static void *twa_start = &twa_bottom;
+static void *twa_end = (void*) ((uint32_t) &twa_top - 1);
 
 static int duk_print(duk_context *ctx) {
   int argc = duk_get_top(ctx);
@@ -98,23 +101,37 @@ void main(multiboot_info_t* mbi, uint32_t magic) {
     printf(" with arguments '%s'", mbi->cmdline);
   }
   printf("\n");
+  printf("kernel: kernel is at [%p:%p]\n", kernel_start, kernel_end);
+  printf("kernel: stack is at [%p:%p]\n", stack_start, stack_end);
+  printf("kernel: twa is at [%p:%p]\n", twa_start, twa_end);
+
+  // Init twa
+  twa_init(twa_start, twa_end);
+
+  // Init debug stage 1
+  if (mbi->flags & MBI_FLAG_SYMS_ELF) {
+    dbg_init_1(&(mbi->syms.elf));
+  } else {
+    dbg_init_1(0);
+  }
 
   // Init memory map
-  if (mbi->flags & MBI_FLAG_MMAP) {
-    mmu_init(mbi->mmap_addr, mbi->mmap_length, kernel_start, kernel_end,
-        stack_start, stack_end);
-  } else {
-    k_panic("no memory map available from GRUB2");
-  }
+  k_ensure(mbi->flags & MBI_FLAG_MMAP);
 
-  // Init debug
-  if (mbi->flags & MBI_FLAG_SYMS_ELF) {
-    dbg_init(&(mbi->syms.elf));
-  } else {
-    dbg_init(0);
-  }
+  range_t lock_ranges[] = { { kernel_start, kernel_end }, { stack_start,
+      stack_end }, { twa_start, twa_end } };
 
-  duk_test();
+  mmu_init(mbi->mmap_addr, mbi->mmap_length, lock_ranges,
+      sizeof(lock_ranges) / sizeof(range_t));
+
+  // Run stage 2 of initializations
+  dbg_init_2();
+
+  // Reclaim twa as free space for kernel
+  twa_destroy();
+  mmu_reclaim(twa_start, twa_end);
+
+  //duk_test();
 }
 
 /* http://yosefk.com/blog/getting-the-call-stack-without-a-frame-pointer.html */

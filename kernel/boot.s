@@ -50,6 +50,14 @@ stack_bottom:
 stack_top:
 .global stack_bottom, stack_top
 
+# Reserve a temporary working area for creating the memory map without destroying
+# valueble data in limbo
+.section .twa, "aw", @nobits
+twa_bottom:
+.skip 1048576 # 1MB
+twa_top:
+.global twa_bottom, twa_top
+
 # The linker script specifies _start as the entry point to the kernel and the
 # bootloader will jump to this position once the kernel has been loaded. It
 # doesn't make sense to return from this function as the bootloader is gone.

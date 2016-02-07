@@ -9,6 +9,7 @@ typedef struct _symbol_t {
   char name[64];
 } symbol_t;
 
-void dbg_init(elf_t* elf);
+void dbg_init_1(elf_t* elf);
+void dbg_init_2();
 
 symbol_t* dbg_symbol_at(void* address);

@@ -1,7 +1,10 @@
 #include <stdio.h>
 
 #include "kernel.h"
+#include "twa.h"
 #include "mmu.h"
+
+#define MMU_MAX_RANGES 128
 
 #define _ADD(x, y) (((uint32_t)x)+((uint32_t)y))
 #define _SUB(x, y) (((uint32_t)x)-((uint32_t)y))
@@ -11,11 +14,6 @@
 #define _GTE(x, y) (((uint32_t)x)>=((uint32_t)y))
 
 /* Ranges *********************************************************************/
-typedef struct _range_t {
-  uint32_t start;
-  uint32_t end;
-} range_t;
-
 static int range_overlaps(range_t* range, range_t* other) {
   return range->start < other->start && range->end >= other->start;
 }
@@ -187,14 +185,15 @@ static void nodes_coalesce(node_t* node) {
 }
 
 /* MMU ************************************************************************/
-void mmu_init(mmap_entry_t* mmap_addr, uint32_t mmap_length, void* kernel_start,
-    void* kernel_end, void* stack_start, void* stack_end) {
+void mmu_init(mmap_entry_t* mmap_addr, uint32_t mmap_length,
+    range_t* lock_ranges, size_t lock_ranges_count) {
 
   printf("mmu: loading memory map\n");
+  printf("mmu: locked low memory is at 0:%X\n", MMU_MIN_ADDRESS);
 
-  // We assume this memory is always free because kernel is loaded in hi memory
-  range_t* ranges = (range_t*) MMU_MIN_ADDRESS;
-  size_t rcount = 0;
+  // Get space for ranges in the twa
+  range_t* ranges = (range_t*) twa_alloc(MMU_MAX_RANGES * sizeof(range_t));
+  size_t ranges_count = 0;
 
   // Visit mmap_entries
   for (mmap_entry_t* mma = mmap_addr; _SUB(mma, mmap_addr) < mmap_length; mma =
@@ -203,13 +202,11 @@ void mmu_init(mmap_entry_t* mmap_addr, uint32_t mmap_length, void* kernel_start,
     uint64_t base_addr = mma->base_addr;
     uint64_t end_addr = mma->base_addr + mma->length - 1;
 
-    // Log found block
-    printf("mmu: found %s block %llX-%llX\n",
-        (mma->type == MMAP_TYPE_AVAILABLE) ? "usable" : "locked", base_addr,
-        end_addr);
-
     // Gather free blocks
     if ((mma->type == MMAP_TYPE_AVAILABLE) && (base_addr <= MMU_MAX_ADDRESS)) {
+
+      // Log found block
+      printf("mmu: found usable block [%llX:%llX]\n", base_addr, end_addr);
 
       // Calculate last valid address
       if (_GT(end_addr, last_valid_address)) {
@@ -227,33 +224,42 @@ void mmu_init(mmap_entry_t* mmap_addr, uint32_t mmap_length, void* kernel_start,
       }
 
       // Register range
-      range_t range = { base_addr, end_addr };
-      ranges_append(ranges, &rcount, &range);
+      range_t range = { (void*) (uint32_t) base_addr,
+          (void*) (uint32_t) end_addr };
+      ranges_append(ranges, &ranges_count, &range);
     }
   }
 
-  // Lock kernel in memory
-  range_t kernel_range = { (uint32_t) kernel_start, (uint32_t) kernel_end };
-  ranges_lock(ranges, &rcount, &kernel_range);
+  // Lock requested ranges
+  for (size_t i; i < lock_ranges_count; i++) {
+    range_t *lock_range = lock_ranges + i;
+    printf("mmu: locking block at [%p:%p]\n", lock_range->start,
+        lock_range->end);
+    ranges_lock(ranges, &ranges_count, lock_range);
+  }
 
-  // Lock stack in memory
-  range_t stack_range = { (uint32_t) stack_start, (uint32_t) stack_end };
-  ranges_lock(ranges, &rcount, &stack_range);
-
-  // Copy nodes to stack to avoid overwriting them
-  range_t ranges_copy[rcount];
-  for (size_t i = 0; i < rcount; i++) {
-    ranges_copy[i] = ranges[i];
+  // Sanity check
+  if (ranges_count > MMU_MAX_RANGES) {
+    k_panic("mmu: too many ranges needed to compose memory map");
   }
 
   // Register nodes
-  for (size_t i = 0; i < rcount; i++) {
-    if ((ranges_copy[i].end - ranges_copy[i].start) > sizeof(node_t)) {
-      nodes_append((void*) ranges_copy[i].start, (void*) ranges_copy[i].end);
+  for (size_t i = 0; i < ranges_count; i++) {
+    if ((ranges[i].end - ranges[i].start) > sizeof(node_t)) {
+      nodes_append((void*) ranges[i].start, (void*) ranges[i].end);
     }
   }
 
-  printf("mmu: last valid address is %X\n", mmu_last_address());
+  // Free twa
+  twa_free(MMU_MAX_RANGES * sizeof(range_t));
+
+  // Say something
+  printf("mmu: heap is set up and available (%uMB bytes available)\n",
+      mmu_available() / (1024 * 1024));
+}
+
+void mmu_reclaim(void* start, void* end) {
+  // TODO: implement
 }
 
 void* mmu_alloc(size_t size) {
@@ -302,6 +308,18 @@ void mmu_free(void* ptr) {
   node->free = 1;
 
   nodes_coalesce(node);
+}
+
+uint32_t mmu_available() {
+  uint32_t available = 0;
+
+  for (node_t* node = first_node; node; node = node->next) {
+    if (node->free) {
+      available += node_data_size(node);
+    }
+  }
+
+  return available;
 }
 
 void* mmu_last_address() {
