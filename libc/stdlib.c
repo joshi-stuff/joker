@@ -15,7 +15,11 @@ void *malloc(size_t size) {
 }
 
 void *realloc(void *ptr, size_t size) {
-  return mmu_realloc(ptr, size);
+  if (ptr) {
+    return mmu_realloc(ptr, size);
+  } else {
+    return mmu_alloc(size);
+  }
 }
 
 void free(void *ptr) {

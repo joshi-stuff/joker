@@ -23,7 +23,28 @@ void *memcpy(void *restrict dst, const void *restrict src, size_t n) {
   return dst;
 }
 
-void *memmove(void *dst, const void *src, size_t len)NOT_IMPLEMENTED(memmove)
+void *memmove(void *dst, const void *src, size_t len) {
+  if (src != dst) {
+    if (src < dst) {
+      uint8_t* ps = ((uint8_t*) src) + len - 1;
+      uint8_t* pd = ((uint8_t*) dst) + len - 1;
+
+      while ((len--) > 0) {
+        *(pd--) = *(ps--);
+      }
+    } else {
+      uint8_t* ps = (uint8_t*) src;
+      uint8_t* pd = (uint8_t*) dst;
+
+      while ((len--) > 0) {
+        *(pd++) = *(ps++);
+      }
+    }
+  }
+
+  return dst;
+}
+
 int strncmp(const char *s1, const char *s2, size_t n)NOT_IMPLEMENTED(strncmp)
 
 size_t strlen(const char *s) {
