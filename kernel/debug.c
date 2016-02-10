@@ -115,3 +115,14 @@ symbol_t* dbg_symbol_at(void* address) {
 
   return symbols + 0;
 }
+
+void dbg_dump(void* address, size_t size) {
+  uint8_t* p = (uint8_t*) address;
+
+  printf("[%X:%X] ", p, p + size - 1);
+  for (size_t i = 0; i < size; i++) {
+    printf("%02X", p[i]);
+  }
+  printf("\n");
+}
+

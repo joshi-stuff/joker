@@ -571,19 +571,50 @@ static void specifier_process_unsigned(specifier_t* spec, format_t* fmt,
     break;
   }
 
-  /* TODO: flags, width, precision */
+  /* TODO: flags, precision */
 
-  if (val == 0) {
-    write(out, '0');
-    return;
-  }
-
+  /* Format number */
   int base = strlen(symbols), i = 0;
   char digits[32];
   do {
     digits[i++] = symbols[val % base];
     val /= base;
   } while (val != 0);
+
+  /* Apply padding */
+  if (spec->width > 0) {
+    while (i < spec->width) {
+      if (spec->flag_zero_pad) {
+        digits[i++] = '0';
+      } else {
+        digits[i++] = ' ';
+      }
+    }
+  }
+
+  for (i--; i >= 0; i--) {
+    if (!write(out, digits[i])) {
+      return;
+    }
+  }
+}
+
+static void specifier_process_pointer(specifier_t* spec, format_t* fmt,
+    write_fn_t write, void* out) {
+
+  uint32_t val = va_arg(*(fmt->ap), uint32_t);
+
+  const char* symbols = "0123456789ABCDEF";
+  int base = 16, i = 0;
+  char digits[16];
+  do {
+    digits[i++] = symbols[val % base];
+    val /= base;
+  } while (val != 0);
+
+  while (i < 8) {
+    digits[i++] = '0';
+  }
 
   for (i--; i >= 0; i--) {
     if (!write(out, digits[i])) {
@@ -637,6 +668,9 @@ static void parsed_format_process_specifier(parsed_format_t* pfmt,
       break;
 
     case TYPE_p:
+      specifier_process_pointer(&pfmt->specifier, fmt, write, out);
+      break;
+
     case TYPE_x:
       specifier_process_unsigned(&pfmt->specifier, fmt, write, out,
           "0123456789abcdef");

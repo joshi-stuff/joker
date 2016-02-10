@@ -1,12 +1,13 @@
 #include <stdint.h>
 #include <duktape.h>
 
+#include "multiboot.h"
 #include "kernel.h"
 #include "bios.h"
 #include "debug.h"
 #include "twa.h"
 #include "mmu.h"
-#include "multiboot.h"
+#include "cpu.h"
 
 typedef struct _stack_frame_t {
   struct _stack_frame_t* next;
@@ -118,8 +119,12 @@ void main(multiboot_info_t* mbi, uint32_t magic) {
   // Init memory map
   k_ensure(mbi->flags & MBI_FLAG_MMAP);
 
+  cpu_state_t cpu_state;
+  cpu_save_state(&cpu_state);
+
   range_t lock_ranges[] = { { kernel_start, kernel_end }, { stack_start,
-      stack_end }, { twa_start, twa_end } };
+      stack_end }, { twa_start, twa_end }, { cpu_state.gdt.base,
+      (void*) ((uint32_t) cpu_state.gdt.base + cpu_state.gdt.limit) } };
 
   mmu_init(mbi->mmap_addr, mbi->mmap_length, lock_ranges,
       sizeof(lock_ranges) / sizeof(range_t));
@@ -131,6 +136,8 @@ void main(multiboot_info_t* mbi, uint32_t magic) {
   twa_destroy();
   mmu_reclaim(twa_start, twa_end);
 
+  cpu_dump_registers();
+  cpu_dump_gdt();
   //duk_test();
 }
 

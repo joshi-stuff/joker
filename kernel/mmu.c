@@ -231,7 +231,7 @@ void mmu_init(mmap_entry_t* mmap_addr, uint32_t mmap_length,
   }
 
   // Lock requested ranges
-  for (size_t i; i < lock_ranges_count; i++) {
+  for (size_t i = 0; i < lock_ranges_count; i++) {
     range_t *lock_range = lock_ranges + i;
     printf("mmu: locking block at [%p:%p]\n", lock_range->start,
         lock_range->end);
