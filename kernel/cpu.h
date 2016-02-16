@@ -24,6 +24,18 @@
 #define GDT_DIRTY            0x01
 #define GDT_CLEAN            0x00
 
+#define IDT_PRESENT          0x80
+#define IDT_MISSING          0x00
+#define IDT_PRIV_3           0x60
+#define IDT_PRIV_2           0x40
+#define IDT_PRIV_1           0x20
+#define IDT_PRIV_0           0x00
+#define IDT_TASK_GATE_32     0x05
+#define IDT_INT_GATE_16      0x06
+#define IDT_TRAP_GATE_16     0x07
+#define IDT_INT_GATE_32      0x0E
+#define IDT_TRAP_GATE_32     0x0F
+
 typedef struct __attribute__((packed)) _gdt_t {
   uint16_t limit;
   void* base;
@@ -47,7 +59,7 @@ typedef struct __attribute__((packed)) _idt_entry_t {
   uint16_t offset_1; // offset bits 0..15
   uint16_t selector; // a code segment selector in GDT or LDT
   uint8_t zero;      // unused, set to 0
-  uint8_t type_attr; // type and attributes, see below
+  uint8_t flags;     // type and attributes, see below
   uint16_t offset_2; // offset bits 16..31
 } idt_entry_t;
 
@@ -90,6 +102,13 @@ typedef struct _cpu_state_t {
 #define cpu_gdt_entry_dc(e) ((e)->access & 0x04)
 #define cpu_gdt_entry_rw(e) ((e)->access & 0x02)
 #define cpu_gdt_entry_dirty(e) ((e)->access & 0x01)
+
+#define cpu_idt_entry_selector(e) ((e)->selector)
+#define cpu_idt_entry_offset(e) ((e)->offset_1 || ((e)->offset_2)<<16)
+#define cpu_idt_entry_present(e) ((e)->flags & 0x80)
+#define cpu_idt_entry_privilege(e) ((e)->flags & 0x60)
+#define cpu_idt_entry_type(e) ((e)->flags & 0x0F)
+
 // TODO: this should avoid modifying the state of CPU?
 #define cpu_save_state(cpu_state) asm volatile(\
     "mov %0, eax\n"\
@@ -141,6 +160,8 @@ typedef struct _cpu_state_t {
     ::\
     "eax"\
   )
+
+void cpu_init_1();
 
 void cpu_dump_registers();
 void cpu_dump_gdt();

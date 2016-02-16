@@ -11,7 +11,7 @@ typedef struct _twa_t {
 
 static twa_t* twa = 0;
 
-void twa_init(void* twa_start, void* twa_end) {
+void twa_init_1(void* twa_start, void* twa_end) {
   twa = (twa_t*) twa_start;
   twa->size = (uint32_t) twa_end - (uint32_t) twa_start + 1;
   twa->used = sizeof(twa_t);

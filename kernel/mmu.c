@@ -185,7 +185,7 @@ static void nodes_coalesce(node_t* node) {
 }
 
 /* MMU ************************************************************************/
-void mmu_init(mmap_entry_t* mmap_addr, uint32_t mmap_length,
+void mmu_init_1(mmap_entry_t* mmap_addr, uint32_t mmap_length,
     range_t* lock_ranges, size_t lock_ranges_count) {
 
   printf("mmu: loading memory map\n");

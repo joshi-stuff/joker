@@ -26,7 +26,7 @@ LIBC_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc -Ikernel
 DUKTAPE_SOURCES=duktape.c
 DUKTAPE_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc
 
-KERNEL_SOURCES=boot.s kernel.c bios.c mmu.c debug.c twa.c cpu.c
+KERNEL_SOURCES=boot.s kernel.c scr.c mmu.c debug.c twa.c cpu.c
 KERNEL_AS_FLAGS=$(ASSEMBLE_FLAGS)
 KERNEL_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc -Iduktape
 

@@ -3,11 +3,11 @@
 
 #include "multiboot.h"
 #include "kernel.h"
-#include "bios.h"
 #include "debug.h"
 #include "twa.h"
 #include "mmu.h"
 #include "cpu.h"
+#include "scr.h"
 
 typedef struct _stack_frame_t {
   struct _stack_frame_t* next;
@@ -23,32 +23,34 @@ static void *stack_end = (void*) ((uint32_t) &stack_top - 1);
 static void *twa_start = &twa_bottom;
 static void *twa_end = (void*) ((uint32_t) &twa_top - 1);
 
-static int duk_print(duk_context *ctx) {
-  int argc = duk_get_top(ctx);
-  const char* msg = duk_to_string(ctx, -1);
+/*
+ static int duk_print(duk_context *ctx) {
+ int argc = duk_get_top(ctx);
+ const char* msg = duk_to_string(ctx, -1);
 
-  printf("%s", msg);
+ printf("%s", msg);
 
-  return 0;
-}
+ return 0;
+ }
 
-static void duk_test() {
-  duk_context *ctx = duk_create_heap_default();
+ static void duk_test() {
+ duk_context *ctx = duk_create_heap_default();
 
-  duk_push_global_object(ctx);
-  duk_push_c_function(ctx, duk_print, DUK_VARARGS);
-  duk_put_prop_string(ctx, -2, "print");
-  duk_pop(ctx);
+ duk_push_global_object(ctx);
+ duk_push_c_function(ctx, duk_print, DUK_VARARGS);
+ duk_put_prop_string(ctx, -2, "print");
+ duk_pop(ctx);
 
-  duk_eval_string(ctx, "print('Hello world!\\n');");
-  duk_pop(ctx);
+ duk_eval_string(ctx, "print('Hello world!\\n');");
+ duk_pop(ctx);
 
-  duk_destroy_heap(ctx);
-}
+ duk_destroy_heap(ctx);
+ }
+ */
 
 void k_panic(const char* msg) {
-  bios_print("\nkernel panic: ");
-  bios_print(msg);
+  scr_print("\nkernel panic: ");
+  scr_print(msg);
   asm volatile (
       "\tcli\n"
       ".Lhang:\n"
@@ -76,7 +78,7 @@ void k_ensure_abort(const char* condition, const char* file, size_t line) {
   void *addrs[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
   size_t count = k_get_call_stack(8, addrs);
 
-  snprintf(msg, sizeof(msg), "assert failed (%s:%d): %s\n"
+  snprintf(msg, sizeof(msg), "condition failed (%s:%d): %s\n"
       "kernel panic: call stack: %p %s\n"
       "                          %p %s\n"
       "                          %p %s\n"
@@ -94,8 +96,19 @@ void k_ensure_abort(const char* condition, const char* file, size_t line) {
   k_panic(msg);
 }
 
-void main(multiboot_info_t* mbi, uint32_t magic) {
-  bios_init();
+/*
+ * Stage 1: unstable memory boot stage
+ *
+ * Grab necessary data from memory without destroying it and init essential
+ * devices carefully without modifying memory until we have a stable MMU.
+ *
+ * All dynamic memory needed in this stage must be retrieved from TWA.
+ *
+ * Upon finalization of stage 1, the multiboot_info_t is not guaranteed to be
+ * valid.
+ */
+void k_init_1(multiboot_info_t* mbi) {
+  scr_init_1();
 
   printf("kernel: booting joker");
   if ((mbi->flags & MBI_FLAG_CMDLINE) && *mbi->cmdline) {
@@ -106,38 +119,56 @@ void main(multiboot_info_t* mbi, uint32_t magic) {
   printf("kernel: stack is at [%p:%p]\n", stack_start, stack_end);
   printf("kernel: twa is at [%p:%p]\n", twa_start, twa_end);
 
-  // Init twa
-  twa_init(twa_start, twa_end);
+  printf("kernel: boot stage 1 started\n");
 
-  // Init debug stage 1
-  if (mbi->flags & MBI_FLAG_SYMS_ELF) {
-    dbg_init_1(&(mbi->syms.elf));
-  } else {
-    dbg_init_1(0);
-  }
+  cpu_init_1();
 
-  // Init memory map
-  k_ensure(mbi->flags & MBI_FLAG_MMAP);
+  twa_init_1(twa_start, twa_end);
+
+  dbg_init_1((mbi->flags & MBI_FLAG_SYMS_ELF) ? &(mbi->syms.elf) : 0);
 
   cpu_state_t cpu_state;
   cpu_save_state(&cpu_state);
 
+  k_ensure(mbi->flags & MBI_FLAG_MMAP);
   range_t lock_ranges[] = { { kernel_start, kernel_end }, { stack_start,
       stack_end }, { twa_start, twa_end }, { cpu_state.gdt.base,
       (void*) ((uint32_t) cpu_state.gdt.base + cpu_state.gdt.limit) } };
-
-  mmu_init(mbi->mmap_addr, mbi->mmap_length, lock_ranges,
+  mmu_init_1(mbi->mmap_addr, mbi->mmap_length, lock_ranges,
       sizeof(lock_ranges) / sizeof(range_t));
+}
 
-  // Run stage 2 of initializations
+/*
+ * Stage 2: stable memory boot stage
+ *
+ * Consolidate essential data temporarily stored in TWA to MMU and reclaim TWA
+ * space for later use by MMU.
+ *
+ * Init the rest of devices.
+ *
+ * Upon finalization of stage 2, the TWA is no longer valid.
+ */
+void k_init_2() {
+  printf("kernel: boot stage 2 started\n");
+
   dbg_init_2();
 
-  // Reclaim twa as free space for kernel
   twa_destroy();
   mmu_reclaim(twa_start, twa_end);
+}
 
+void main(multiboot_info_t* mbi, uint32_t magic) {
+  k_init_1(mbi);
+  k_init_2();
+
+  // Run kernel
+  printf("kernel: joker booted up and running\n");
+
+  /*
   cpu_dump_registers();
   cpu_dump_gdt();
+  cpu_dump_idt();
+  */
   //duk_test();
 }
 

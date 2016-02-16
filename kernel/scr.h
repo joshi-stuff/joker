@@ -18,10 +18,10 @@
 #define SCREEN_HEIGHT 25
 #define SCREEN_WIDTH  80
 
-void bios_init();
+void scr_init_1();
 
-void bios_clrscr();
-void bios_moveto(int row, int col);
-void bios_setcolor(int fg, int bg);
-void bios_print(const char* text);
-void bios_scroll(int rows);
+void scr_clear();
+void scr_moveto(int row, int col);
+void scr_setcolor(int fg, int bg);
+void scr_print(const char* text);
+void scr_scroll(int rows);

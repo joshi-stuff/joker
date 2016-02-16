@@ -11,8 +11,9 @@ typedef struct _range_t {
   void* end;
 } range_t;
 
-void mmu_init(mmap_entry_t* mmap_addr, uint32_t mmap_length,
+void mmu_init_1(mmap_entry_t* mmap_addr, uint32_t mmap_length,
     range_t* lock_ranges, size_t lock_ranges_count);
+
 void mmu_reclaim(void* start, void* end);
 
 void* mmu_alloc(size_t size);

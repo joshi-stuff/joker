@@ -1,4 +1,4 @@
-#include <bios.h>
+#include <scr.h>
 
 #include "stdio.h"
 #include "string.h"
@@ -460,9 +460,9 @@ static int write_buffer(void* out, char c) {
   return 0;
 }
 
-static int write_bios(void *out, char c) {
+static int write_scr(void *out, char c) {
   char sz[2] = { c, 0 };
-  bios_print(sz);
+  scr_print(sz);
   return 1;
 }
 
@@ -751,7 +751,7 @@ int printf(const char * restrict format, ...) {
   format_t fmt;
   format_init(&fmt, format, &ap);
 
-  int ret = format_process(&fmt, write_bios, NULL);
+  int ret = format_process(&fmt, write_scr, NULL);
 
   va_end(ap);
   return ret;
