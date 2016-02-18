@@ -23,30 +23,28 @@ static void *stack_end = (void*) ((uint32_t) &stack_top - 1);
 static void *twa_start = &twa_bottom;
 static void *twa_end = (void*) ((uint32_t) &twa_top - 1);
 
-/*
- static int duk_print(duk_context *ctx) {
- int argc = duk_get_top(ctx);
- const char* msg = duk_to_string(ctx, -1);
+static int duk_print(duk_context *ctx) {
+  int argc = duk_get_top(ctx);
+  const char* msg = duk_to_string(ctx, -1);
 
- printf("%s", msg);
+  printf("%s", msg);
 
- return 0;
- }
+  return 0;
+}
 
- static void duk_test() {
- duk_context *ctx = duk_create_heap_default();
+static void duk_test() {
+  duk_context *ctx = duk_create_heap_default();
 
- duk_push_global_object(ctx);
- duk_push_c_function(ctx, duk_print, DUK_VARARGS);
- duk_put_prop_string(ctx, -2, "print");
- duk_pop(ctx);
+  duk_push_global_object(ctx);
+  duk_push_c_function(ctx, duk_print, DUK_VARARGS);
+  duk_put_prop_string(ctx, -2, "print");
+  duk_pop(ctx);
 
- duk_eval_string(ctx, "print('Hello world!\\n');");
- duk_pop(ctx);
+  duk_eval_string(ctx, "print('Hello world!\\n');");
+  duk_pop(ctx);
 
- duk_destroy_heap(ctx);
- }
- */
+  duk_destroy_heap(ctx);
+}
 
 void k_panic(const char* msg) {
   scr_print("\nkernel panic: ");
@@ -78,7 +76,8 @@ void k_ensure_abort(const char* condition, const char* file, size_t line) {
   void *addrs[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
   size_t count = k_get_call_stack(8, addrs);
 
-  snprintf(msg, sizeof(msg), "condition failed (%s:%d): %s\n"
+  snprintf(msg, sizeof(msg), "condition failed (%s:%d)\n"
+      "              %s\n\n"
       "kernel panic: call stack: %p %s\n"
       "                          %p %s\n"
       "                          %p %s\n"
@@ -165,10 +164,10 @@ void main(multiboot_info_t* mbi, uint32_t magic) {
   printf("kernel: joker booted up and running\n");
 
   /*
-  cpu_dump_registers();
-  cpu_dump_gdt();
-  cpu_dump_idt();
-  */
+   cpu_dump_idt();
+   cpu_dump_registers();
+   cpu_dump_gdt();
+   */
   //duk_test();
 }
 

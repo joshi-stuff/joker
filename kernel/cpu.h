@@ -56,11 +56,11 @@ typedef struct __attribute__((packed)) _gdt_entry_t {
 } gdt_entry_t;
 
 typedef struct __attribute__((packed)) _idt_entry_t {
-  uint16_t offset_1; // offset bits 0..15
-  uint16_t selector; // a code segment selector in GDT or LDT
-  uint8_t zero;      // unused, set to 0
-  uint8_t flags;     // type and attributes, see below
-  uint16_t offset_2; // offset bits 16..31
+  uint16_t offset_low;  // offset bits 0..15
+  uint16_t selector;    // a code segment selector in GDT or LDT
+  uint8_t zero;         // unused, set to 0
+  uint8_t flags;        // type and attributes, see below
+  uint16_t offset_high; // offset bits 16..31
 } idt_entry_t;
 
 typedef struct _cpu_state_t {
@@ -104,7 +104,7 @@ typedef struct _cpu_state_t {
 #define cpu_gdt_entry_dirty(e) ((e)->access & 0x01)
 
 #define cpu_idt_entry_selector(e) ((e)->selector)
-#define cpu_idt_entry_offset(e) ((e)->offset_1 || ((e)->offset_2)<<16)
+#define cpu_idt_entry_offset(e) (((uint32_t)((e)->offset_low)) | (((uint32_t)((e)->offset_high))<<16))
 #define cpu_idt_entry_present(e) ((e)->flags & 0x80)
 #define cpu_idt_entry_privilege(e) ((e)->flags & 0x60)
 #define cpu_idt_entry_type(e) ((e)->flags & 0x0F)
@@ -162,6 +162,9 @@ typedef struct _cpu_state_t {
   )
 
 void cpu_init_1();
+
+void cpu_set_idt_gate(uint8_t num, uint16_t selector, void* ptr,
+    uint8_t privilege, uint8_t type);
 
 void cpu_dump_registers();
 void cpu_dump_gdt();
