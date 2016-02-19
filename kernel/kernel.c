@@ -40,7 +40,7 @@ static void duk_test() {
   duk_put_prop_string(ctx, -2, "print");
   duk_pop(ctx);
 
-  duk_eval_string(ctx, "print('Hello world!\\n');");
+  duk_eval_string(ctx, "print('Hello world from Javascript!\\n');");
   duk_pop(ctx);
 
   duk_destroy_heap(ctx);
@@ -168,7 +168,7 @@ void main(multiboot_info_t* mbi, uint32_t magic) {
    cpu_dump_registers();
    cpu_dump_gdt();
    */
-  //duk_test();
+  duk_test();
 }
 
 /* http://yosefk.com/blog/getting-the-call-stack-without-a-frame-pointer.html */
