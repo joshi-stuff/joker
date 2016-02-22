@@ -21,7 +21,7 @@ COMPILE_FLAGS=-std=gnu99 -ffreestanding -DFREE_STANDING -O0 -masm=intel
 LINK_FLAGS=-ffreestanding -O2 -nostdlib -lgcc -Wl,-Map,build/kernel.map
 
 LIBC_SOURCES=libc.c math.c setjmp.c stdio.c stdlib.c string.c _helpers.c
-LIBC_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc -Ikernel
+LIBC_GCC_FLAGS=$(COMPILE_FLAGS) -Ikernel/include
 
 DUKTAPE_SOURCES=duktape.c
 DUKTAPE_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc

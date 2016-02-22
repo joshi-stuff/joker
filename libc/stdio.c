@@ -1,4 +1,4 @@
-#include <scr.h>
+#include <kernel.h>
 
 #include "stdio.h"
 #include "string.h"
@@ -462,7 +462,8 @@ static int write_buffer(void* out, char c) {
 
 static int write_scr(void *out, char c) {
   char sz[2] = { c, 0 };
-  scr_print(sz);
+  // TODO: this should go to a terminal in the future
+  k_print(sz);
   return 1;
 }
 
