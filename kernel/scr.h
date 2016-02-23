@@ -24,4 +24,5 @@ void scr_clear();
 void scr_moveto(int row, int col);
 void scr_setcolor(int fg, int bg);
 void scr_print(const char* text);
+void scr_putc(char ch);
 void scr_scroll(int rows);

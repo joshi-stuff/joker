@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 
-
 static uint16_t* screen_buffer = (uint16_t*) 0xB8000;
 static int cursor_row = 0;
 static int cursor_col = 0;
@@ -79,6 +78,11 @@ void scr_print(const char* text) {
   }
 
   scr_moveto(cursor_row, cursor_col);
+}
+
+void scr_putc(char ch) {
+  char sz[2] = { ch, 0 };
+  scr_print(sz);
 }
 
 void scr_scroll(int rows) {

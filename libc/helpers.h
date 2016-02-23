@@ -1,5 +1,6 @@
 #include <kernel.h>
-#include "stdio.h"
+
+#include "include/stdio.h"
 
 #define NOT_IMPLEMENTED(fn)   {k_panic(#fn "() not implemented\n");return 0;}
 #define NOT_IMPLEMENTED_V(fn) {k_panic(#fn "() not implemented\n");}

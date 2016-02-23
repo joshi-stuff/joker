@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdint.h>
 
 #include "kernel.h"
@@ -15,11 +14,11 @@ void twa_init_1(void* twa_start, void* twa_end) {
   twa = (twa_t*) twa_start;
   twa->size = (uint32_t) twa_end - (uint32_t) twa_start + 1;
   twa->used = sizeof(twa_t);
-  printf("twa: allocating %uKB for twa\n", twa->size / 1024);
+  k_printf("twa: allocating %uKB for twa\n", twa->size / 1024);
 }
 
 void twa_destroy() {
-  printf("twa: destroyed twa\n");
+  k_printf("twa: destroyed twa\n");
   twa = 0;
 }
 

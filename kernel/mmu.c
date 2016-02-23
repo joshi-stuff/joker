@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "kernel.h"
 #include "twa.h"
 #include "mmu.h"
@@ -71,9 +69,9 @@ static void ranges_lock(range_t* ranges, size_t *count, range_t* lock) {
 
 static void ranges_dump(range_t* ranges, size_t count) {
   for (size_t i = 0; i < count; i++) {
-    printf("%X-%X ", ranges[i].start, ranges[i].end);
+    k_printf("%x-%x ", ranges[i].start, ranges[i].end);
   }
-  printf("\n");
+  k_printf("\n");
 }
 
 /* Nodes **********************************************************************/
@@ -188,8 +186,8 @@ static void nodes_coalesce(node_t* node) {
 void mmu_init_1(mmap_entry_t* mmap_addr, uint32_t mmap_length,
     range_t* lock_ranges, size_t lock_ranges_count) {
 
-  printf("mmu: loading memory map\n");
-  printf("mmu: locked low memory is at 0:%X\n", MMU_MIN_ADDRESS);
+  k_printf("mmu: loading memory map\n");
+  k_printf("mmu: locked low memory is at 0:%x\n", MMU_MIN_ADDRESS);
 
   // Get space for ranges in the twa
   range_t* ranges = (range_t*) twa_alloc(MMU_MAX_RANGES * sizeof(range_t));
@@ -206,7 +204,7 @@ void mmu_init_1(mmap_entry_t* mmap_addr, uint32_t mmap_length,
     if ((mma->type == MMAP_TYPE_AVAILABLE) && (base_addr <= MMU_MAX_ADDRESS)) {
 
       // Log found block
-      printf("mmu: found usable block [%llX:%llX]\n", base_addr, end_addr);
+      k_printf("mmu: found usable block [%w:%w]\n", base_addr, end_addr);
 
       // Calculate last valid address
       if (_GT(end_addr, last_valid_address)) {
@@ -233,7 +231,7 @@ void mmu_init_1(mmap_entry_t* mmap_addr, uint32_t mmap_length,
   // Lock requested ranges
   for (size_t i = 0; i < lock_ranges_count; i++) {
     range_t *lock_range = lock_ranges + i;
-    printf("mmu: locking block at [%p:%p]\n", lock_range->start,
+    k_printf("mmu: locking block at [%p:%p]\n", lock_range->start,
         lock_range->end);
     ranges_lock(ranges, &ranges_count, lock_range);
   }
@@ -254,7 +252,7 @@ void mmu_init_1(mmap_entry_t* mmap_addr, uint32_t mmap_length,
   twa_free(MMU_MAX_RANGES * sizeof(range_t));
 
   // Say something
-  printf("mmu: heap is set up and available (%uMB bytes available)\n",
+  k_printf("mmu: heap is set up and available (%uMB bytes available)\n",
       mmu_available() / (1024 * 1024));
 }
 
@@ -327,13 +325,13 @@ void* mmu_last_address() {
 }
 
 void mmu_dump() {
-  printf("mmu_dump: ");
+  k_printf("mmu_dump: ");
   for (node_t* node = first_node; node; node = node->next) {
     if (node != first_node) {
-      printf(", ");
+      k_printf(", ");
     }
-    printf("%c(%X-%X)", node->free ? 'o' : 'x', node, node->end);
+    k_printf("%c(%x-%x)", node->free ? 'o' : 'x', node, node->end);
   }
-  printf("\n");
+  k_printf("\n");
 }
 

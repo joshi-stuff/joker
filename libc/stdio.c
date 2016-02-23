@@ -1,10 +1,11 @@
+#include <stdint.h>
 #include <kernel.h>
 
-#include "stdio.h"
-#include "string.h"
-#include "stdint.h"
-#include "stdlib.h"
-#include "_helpers.h"
+#include "include/stdio.h"
+
+#include "helpers.h"
+#include "include/string.h"
+#include "include/stdlib.h"
 
 #define WIDTH_FETCH     -1
 #define PRECISION_NONE  -2
@@ -463,7 +464,7 @@ static int write_buffer(void* out, char c) {
 static int write_scr(void *out, char c) {
   char sz[2] = { c, 0 };
   // TODO: this should go to a terminal in the future
-  k_print(sz);
+  k_printf("%s", sz);
   return 1;
 }
 

@@ -13,3 +13,4 @@ intel
 .project
 .settings
 kernel.map
+emulator

@@ -1,9 +1,8 @@
 #include <stdint.h>
-#include <stdio.h>
-#include <string.h>
 
 #include "cpu.h"
 #include "kernel.h"
+#include "helpers.h"
 
 static idt_t idt;
 static idt_entry_t idt_entries[256];
@@ -74,7 +73,7 @@ void cpu_init_1() {
   cpu_state_t cpu_state;
   cpu_save_state(&cpu_state);
 
-  memset(idt_entries, 0, sizeof(idt_entries));
+  _memset(idt_entries, 0, sizeof(idt_entries));
 
   SET_INT_HANDLER(0);
   SET_INT_HANDLER(1);
@@ -134,16 +133,16 @@ void cpu_dump_registers() {
   cpu_state_t cpu_state;
   cpu_save_state(&cpu_state);
 
-  printf("ES=%04X  FS=%04X   GS=%04X  DS=%04X  SS=%04X   CS=%04X\n",
+  k_printf("ES=%04X  FS=%04X   GS=%04X  DS=%04X  SS=%04X   CS=%04X\n",
       cpu_state.es, cpu_state.fs, cpu_state.gs, cpu_state.ds, cpu_state.ss,
       cpu_state.cs);
-  printf("ESP=%08X  EBP=%08X  ESI=%08X  EDI=%08X\n", cpu_state.esp,
+  k_printf("ESP=%08X  EBP=%08X  ESI=%08X  EDI=%08X\n", cpu_state.esp,
       cpu_state.ebp, cpu_state.esi, cpu_state.edi);
-  printf("EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X\n", cpu_state.eax,
+  k_printf("EAX=%08X  EBX=%08X  ECX=%08X  EDX=%08X\n", cpu_state.eax,
       cpu_state.ebx, cpu_state.ecx, cpu_state.edx);
-  printf("CR0=%08X  CR2=%08X  CR3=%08X  CR4=%08X\n", cpu_state.cr0,
+  k_printf("CR0=%08X  CR2=%08X  CR3=%08X  CR4=%08X\n", cpu_state.cr0,
       cpu_state.cr2, cpu_state.cr3, cpu_state.cr4);
-  printf("EFL=%08X  GDT=%08X  IDT=%08X\n", cpu_state.eflags, cpu_state.gdt,
+  k_printf("EFL=%08X  GDT=%08X  IDT=%08X\n", cpu_state.eflags, cpu_state.gdt,
       cpu_state.idt);
 }
 
@@ -155,13 +154,13 @@ void cpu_dump_gdt() {
   size_t gdt_entries_count = ((size_t) cpu_state.gdt.limit + 1)
       / sizeof(gdt_entry_t);
 
-  printf("GDT [%p:%p] (%u entries)\n", cpu_state.gdt.base,
+  k_printf("GDT [%p:%p] (%u entries)\n", cpu_state.gdt.base,
       ((uint32_t) cpu_state.gdt.base) + cpu_state.gdt.limit, gdt_entries_count);
 
   for (size_t i = 0; i < gdt_entries_count; i++) {
     gdt_entry_t* gdt_entry = gdt_entries + i;
 
-    printf("    [%p:%p] |%04X:| %s %s %s PRIV%u %s %s\n",
+    k_printf("    [%p:%p] |%04X:| %s %s %s PRIV%u %s %s\n",
         cpu_gdt_entry_base(gdt_entry),
         cpu_gdt_entry_granularity(gdt_entry) == GDT_GRANULARITY_PAGE ?
             (uint8_t*) cpu_gdt_entry_base(gdt_entry)
@@ -193,7 +192,7 @@ void cpu_dump_idt() {
   size_t idt_entries_count = ((size_t) cpu_state.idt.limit + 1)
       / sizeof(idt_entry_t);
 
-  printf("IDT [%p:%p] (%u entries)\n", cpu_state.idt.base,
+  k_printf("IDT [%p:%p] (%u entries)\n", cpu_state.idt.base,
       ((uint32_t) cpu_state.idt.base) + cpu_state.idt.limit, idt_entries_count);
 
   for (size_t i = 0; i < idt_entries_count; i++) {
@@ -218,8 +217,8 @@ void cpu_dump_idt() {
       break;
     }
 
-    printf("%3u |%04X:%p| %s PRIV%u %s\n", i, cpu_idt_entry_selector(idt_entry),
-        cpu_idt_entry_offset(idt_entry),
+    k_printf("%3u |%04X:%p| %s PRIV%u %s\n", i,
+        cpu_idt_entry_selector(idt_entry), cpu_idt_entry_offset(idt_entry),
         cpu_idt_entry_present(idt_entry) == IDT_PRESENT ? "PRES" : "MISS",
         cpu_idt_entry_privilege(idt_entry) / IDT_PRIV_1, type);
   }

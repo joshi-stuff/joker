@@ -1,5 +1,5 @@
+#include <stdarg.h>
 #include <stdint.h>
-#include <duktape.h>
 
 #include "multiboot.h"
 #include "kernel.h"
@@ -8,11 +8,7 @@
 #include "mmu.h"
 #include "cpu.h"
 #include "scr.h"
-
-typedef struct _stack_frame_t {
-  struct _stack_frame_t* next;
-  void* ret;
-} stack_frame_t;
+#include "helpers.h"
 
 extern uint8_t stack_bottom, stack_top, twa_bottom, twa_top;
 
@@ -23,44 +19,18 @@ static void *stack_end = (void*) ((uint32_t) &stack_top - 1);
 static void *twa_start = &twa_bottom;
 static void *twa_end = (void*) ((uint32_t) &twa_top - 1);
 
-static size_t get_call_stack(size_t max_depth, void** return_addresses) {
-  register stack_frame_t* fp asm("ebp");
-  stack_frame_t* frame = fp;
-  size_t depth;
-
-  for (depth = 0; (depth < max_depth) && frame; depth++) {
-    return_addresses[depth] = frame->ret;
-    frame = frame->next;
-  }
-
-  return depth;
-}
-
 void k_panic(const char* msg) {
-  scr_print("\nkernel panic: ");
-  scr_print(msg);
-
-  char stack[1024];
+  k_printf("\n\nkernel panic: %s\n\ncall stack:   ", msg);
 
   void *addrs[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-  size_t count = get_call_stack(8, addrs);
+  size_t count = _get_call_stack(8, addrs);
 
-  snprintf(stack, sizeof(stack), "\n\n"
-      "call stack: %p %s\n"
-      "            %p %s\n"
-      "            %p %s\n"
-      "            %p %s\n"
-      "            %p %s\n"
-      "            %p %s\n"
-      "            %p %s\n"
-      "            %p %s\n", addrs[0], dbg_symbol_at(addrs[0])->name, addrs[1],
-      dbg_symbol_at(addrs[1])->name, addrs[2], dbg_symbol_at(addrs[2])->name,
-      addrs[3], dbg_symbol_at(addrs[3])->name, addrs[4],
-      dbg_symbol_at(addrs[4])->name, addrs[5], dbg_symbol_at(addrs[5])->name,
-      addrs[6], dbg_symbol_at(addrs[6])->name, addrs[7],
-      dbg_symbol_at(addrs[7])->name);
-
-  scr_print(stack);
+  for (size_t i = 0; i < count; i++) {
+    if (i > 0) {
+      k_printf("              ");
+    }
+    k_printf("%p %s\n", addrs[i], dbg_symbol_at(addrs[i])->name);
+  }
 
   asm volatile (
       "\tcli\n"
@@ -68,6 +38,89 @@ void k_panic(const char* msg) {
       "\thlt\n"
       "\tjmp .Lhang\n"
   );
+}
+
+void k_printf(const char* msg, ...) {
+  va_list ap;
+
+  va_start(ap, msg);
+
+  while (*msg) {
+    if (*msg == '%') {
+      msg++;
+
+      switch (*msg) {
+
+      case '%': {
+        scr_putc('%');
+        break;
+      }
+
+      case 'c': {
+        scr_putc(va_arg(ap, char));
+        break;
+      }
+
+      case 's': {
+        scr_print(va_arg(ap, char*));
+        break;
+      }
+
+      case 'd': {
+        char sz[32];
+        _format_signed(va_arg(ap, int32_t), false, 0, sz);
+        scr_print(sz);
+        break;
+      }
+
+      case 'u': {
+        char sz[32];
+        _format_unsigned(va_arg(ap, uint32_t), false, 0, sz);
+        scr_print(sz);
+        break;
+      }
+
+      case 'w': {
+        char sz[32];
+        _format_unsigned(va_arg(ap, uint64_t), true, 16, sz);
+        scr_print(sz);
+        break;
+      }
+
+      case 'p':
+      case 'x': {
+        char sz[32];
+        _format_unsigned(va_arg(ap, uint32_t), true, 8, sz);
+        scr_print(sz);
+        break;
+      }
+
+      case 'y': {
+        char sz[32];
+        _format_unsigned(va_arg(ap, uint16_t), true, 4, sz);
+        scr_print(sz);
+        break;
+      }
+
+      case 'z': {
+        char sz[32];
+        _format_unsigned(va_arg(ap, uint8_t), true, 2, sz);
+        scr_print(sz);
+        break;
+      }
+
+      default: {
+        k_panic("invalid k_printf modifier");
+      }
+      }
+    } else {
+      scr_putc(*msg);
+    }
+
+    msg++;
+  }
+
+  va_end(ap);
 }
 
 void k_print(const char* msg) {
@@ -88,12 +141,8 @@ void k_free(void* ptr) {
 }
 
 void k_ensure_abort(const char* condition, const char* file, size_t line) {
-  char msg[1024];
-
-  snprintf(msg, sizeof(msg), "condition failed (%s:%d):\n\n  %s", file, line,
-      condition);
-
-  k_panic(msg);
+  k_printf("condition failed at %s:%d\n");
+  k_panic(condition);
 }
 
 /*
@@ -110,16 +159,16 @@ void k_ensure_abort(const char* condition, const char* file, size_t line) {
 void k_init_1(multiboot_info_t* mbi) {
   scr_init_1();
 
-  printf("kernel: booting joker");
+  k_printf("kernel: booting joker");
   if ((mbi->flags & MBI_FLAG_CMDLINE) && *mbi->cmdline) {
-    printf(" with arguments '%s'", mbi->cmdline);
+    k_printf(" with arguments '%s'", mbi->cmdline);
   }
-  printf("\n");
-  printf("kernel: kernel is at [%p:%p]\n", kernel_start, kernel_end);
-  printf("kernel: stack is at [%p:%p]\n", stack_start, stack_end);
-  printf("kernel: twa is at [%p:%p]\n", twa_start, twa_end);
+  k_printf("\n");
+  k_printf("kernel: kernel is at [%p:%p]\n", kernel_start, kernel_end);
+  k_printf("kernel: stack is at [%p:%p]\n", stack_start, stack_end);
+  k_printf("kernel: twa is at [%p:%p]\n", twa_start, twa_end);
 
-  printf("kernel: boot stage 1 started\n");
+  k_printf("kernel: boot stage 1 started\n");
 
   cpu_init_1();
 
@@ -149,7 +198,7 @@ void k_init_1(multiboot_info_t* mbi) {
  * Upon finalization of stage 2, the TWA is no longer valid.
  */
 void k_init_2() {
-  printf("kernel: boot stage 2 started\n");
+  k_printf("kernel: boot stage 2 started\n");
 
   dbg_init_2();
 
@@ -162,8 +211,7 @@ void main(multiboot_info_t* mbi, uint32_t magic) {
   k_init_2();
 
   // Run kernel
-  printf("kernel: joker booted up and running\n");
-
+  k_printf("kernel: joker booted up and running\n");
 }
 
 /* http://yosefk.com/blog/getting-the-call-stack-without-a-frame-pointer.html */

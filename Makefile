@@ -20,15 +20,15 @@ ASSEMBLE_FLAGS=
 COMPILE_FLAGS=-std=gnu99 -ffreestanding -DFREE_STANDING -O0 -masm=intel
 LINK_FLAGS=-ffreestanding -O2 -nostdlib -lgcc -Wl,-Map,build/kernel.map
 
-LIBC_SOURCES=libc.c math.c setjmp.c stdio.c stdlib.c string.c _helpers.c
+KERNEL_SOURCES=boot.s helpers.c kernel.c scr.c mmu.c debug.c twa.c cpu.c
+KERNEL_AS_FLAGS=$(ASSEMBLE_FLAGS)
+KERNEL_GCC_FLAGS=$(COMPILE_FLAGS)
+
+LIBC_SOURCES=math.c setjmp.c stdio.c stdlib.c string.c time.c helpers.c
 LIBC_GCC_FLAGS=$(COMPILE_FLAGS) -Ikernel/include
 
 DUKTAPE_SOURCES=duktape.c
-DUKTAPE_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc
-
-KERNEL_SOURCES=boot.s kernel.c scr.c mmu.c debug.c twa.c cpu.c
-KERNEL_AS_FLAGS=$(ASSEMBLE_FLAGS)
-KERNEL_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc -Iduktape
+DUKTAPE_GCC_FLAGS=$(COMPILE_FLAGS) -Ilibc/include
 
 ISO_GRUB_MKRESCUE_FLAGS=--xorriso=$(XORRISO)
 

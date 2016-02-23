@@ -1,6 +1,8 @@
-#include "math.h"
-#include "stdint.h"
-#include "_helpers.h"
+#include <stdint.h>
+
+#include "include/math.h"
+
+#include "helpers.h"
 
 double fmod(double x, double y)NOT_IMPLEMENTED(fmod)
 
